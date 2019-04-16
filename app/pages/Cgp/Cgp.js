@@ -6,6 +6,7 @@ import Flexbox from 'flexbox-react'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 import cx from 'classnames'
 import moment from 'moment'
+import { isEmpty } from 'lodash'
 
 import PasteButton from '../../components/PasteButton'
 import { ref } from '../../utils/domUtils'
@@ -98,6 +99,17 @@ class CGP extends Component<Props> {
         <span>There was a problem with creating the vote.</span>
         <span className="devider" />
         <p>Error message: {errorMessage}</p>
+      </FormResponseMessage>
+    )
+  }
+
+  renderSuccessResponse() {
+    if (this.props.voteStore.status !== 'success') {
+      return null
+    }
+    return (
+      <FormResponseMessage className="success">
+        <span>Successfully voted, the vote will appear after a mined block.</span>
       </FormResponseMessage>
     )
   }
@@ -209,6 +221,10 @@ class CGP extends Component<Props> {
 
   renderRows() {
     const { cgpStore } = this.props
+    console.log(cgpStore.payoutVote)
+    if (isEmpty(cgpStore.payoutVote)) {
+      return this.renderErrorResponse()
+    }
     return cgpStore.payoutVote.map((vote, index) => (
       <Fragment key={`${vote.recipient}-${index}`}>
         <tr onClick={this.onRowClicked.bind(this, vote)}>
@@ -291,6 +307,8 @@ class CGP extends Component<Props> {
             <Flexbox flexDirection="column" flexGrow={1} >
               { this.renderVote() }
               { this.renderResult() }
+              { this.renderSuccessResponse() }
+              { this.renderErrorResponse() }
             </Flexbox>
             <Flexbox className="active-proposal" flexGrow={1} flexDirection="column" >
               <Flexbox className="proposal" flexDirection="column" >

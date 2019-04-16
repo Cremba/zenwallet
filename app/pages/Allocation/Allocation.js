@@ -71,8 +71,8 @@ class Allocation extends Component<Props, State> {
   }
 
   calcRemainingBlock = () => {
-    const { headers } = this.props.networkStore
-    return (this.getNextDistribution(headers) * intervalLength) - headers
+    const { blocks } = this.props.networkStore
+    return (this.getNextDistribution(blocks) * intervalLength) - blocks
   }
 
   getNextDistribution = (headers) => Math.ceil((headers / intervalLength))
@@ -182,8 +182,14 @@ class Allocation extends Component<Props, State> {
   }
 
   render() {
-    const { totalAllocationAmountVoted, resultAllocation } = this.props.cgpStore
-    const { outstanding, utilized, pastAllocation } = this.props.voteStore
+    const {
+      cgpStore: {
+        totalAllocationAmountVoted, resultAllocation, error,
+      },
+      voteStore: {
+        outstanding, utilized, pastAllocation, status,
+      },
+    } = this.props
     const zenCount = Number(utilized) + Number(outstanding)
     return (
       <Layout className="allocation">
@@ -233,7 +239,7 @@ class Allocation extends Component<Props, State> {
                   chartName="currentVotes"
                   showTitle={false}
                   externalChartData={this.getData}
-                  externalChartLoading={false}
+                  externalChartLoading={error === 'No Data' || status === 'success'}
                   current={[{
                     amount: this.state.value,
                     count: pastAllocation === this.state.value ? outstanding : zenCount,

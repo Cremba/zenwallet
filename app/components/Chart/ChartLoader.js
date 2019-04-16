@@ -65,7 +65,7 @@ class ChartLoader extends Component<Props, State> {
     if (this.chartLoading) {
       return (
         <span>
-          <i className="icon far fa-spinner-third zen-spin" />
+          <i className="fas fa-var-spinner" />
           loading
         </span>)
     }
