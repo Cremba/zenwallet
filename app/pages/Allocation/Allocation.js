@@ -43,7 +43,7 @@ type Props = {
 @observer
 class Allocation extends Component<Props, State> {
   state = {
-    value: this.props.voteStore.pastAllocation || 0,
+    value: this.props.voteStore.pastAllocation || 50,
   }
   componentDidMount() {
     this.props.cgpStore.initPolling()
@@ -158,12 +158,13 @@ class Allocation extends Component<Props, State> {
                   <label>CGP</label>
                 </Flexbox>
                 <Flexbox flexDirection="row" justifyContent="flex-end">
-                  <label>Mining Allocation</label>
+                  <label>Miner reward</label>
                 </Flexbox>
               </Flexbox>
 
               <Flexbox flexDirection="row" height="25px">
                 <Slider
+                  defaultValue={this.state.value}
                   min={0}
                   max={90}
                   step={10}
@@ -239,14 +240,13 @@ class Allocation extends Component<Props, State> {
             <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
             <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
             <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
-            <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
             <BoxLabel
               firstLine="Current Allocation"
               secondLine={(
                 <span className="form-row td">
                   <span className="dot blue" /> CGP:
                   <span className="reward" >{resultAllocation}%</span>
-                  <span className="dot off-white" /> Mining allocation:
+                  <span className="dot off-white" /> Miner reward:
                   <span className="reward" > {100 - resultAllocation}%</span>
                 </span>)}
               className="box"
