@@ -15,6 +15,7 @@ import BoxLabel from '../../components/BoxLabel/BoxLabel'
 import ProtectedButton from '../../components/Buttons'
 import ChartLoader from '../../components/Chart'
 import { kalapasToZen } from '../../utils/zenUtils'
+import FormResponseMessage from '../../components/FormResponseMessage'
 
 const intervalLength = 100
 const marks = {
@@ -99,6 +100,31 @@ class Allocation extends Component<Props, State> {
     this.props.voteStore.createAllocationVote(confirmedPassword)
   }
 
+  renderSuccessResponse() {
+    if (this.props.voteStore.status !== 'success') {
+      return null
+    }
+    return (
+      <FormResponseMessage className="success">
+        <span>Successfully voted, the vote will appear after a mined block.</span>
+      </FormResponseMessage>
+    )
+  }
+
+  renderErrorResponse() {
+    const { status, errorMessage } = this.props.voteStore
+    if (status !== 'error') {
+      return null
+    }
+    return (
+      <FormResponseMessage className="error">
+        <span>There was a problem with creating the vote.</span>
+        <span className="devider" />
+        <p>Error message: {errorMessage}</p>
+      </FormResponseMessage>
+    )
+  }
+
   get areAllFieldsValid() {
     const { allocationAmount } = this.props.voteStore
     return !!((allocationAmount > 0) &&
@@ -127,57 +153,65 @@ class Allocation extends Component<Props, State> {
       voteStore: { inprogress },
     } = this.props
     return (
-      <Flexbox className="allocation-input" flexDirection="column" flexGrow={2}>
-        <label className="allocation-title">How would you like to distribute the allocation?</label>
+      <Flexbox className="allocation-container" flexDirection="column"flexGrow={2} >
+        <Flexbox className="allocation-input" flexDirection="column" >
+          <label className="allocation-title">How would you like to distribute the allocation?</label>
 
-        <Flexbox flexDirection="row">
+          <Flexbox flexDirection="row">
 
-          <Flexbox flexDirection="column" className="slider-div" width="100%">
+            <Flexbox flexDirection="column" className="slider-div" width="100%">
 
-            <Flexbox flexDirection="row" justifyContent="space-between" className="word-labels">
-              <Flexbox flexDirection="row">
-                <label>CGP</label>
+              <Flexbox flexDirection="row" justifyContent="space-between" className="word-labels">
+                <Flexbox flexDirection="row">
+                  <label>CGP</label>
+                </Flexbox>
+                <Flexbox flexDirection="row" justifyContent="flex-end">
+                  <label>Mining Allocation</label>
+                </Flexbox>
               </Flexbox>
-              <Flexbox flexDirection="row" justifyContent="flex-end">
-                <label>Mining Allocation</label>
+
+              <Flexbox flexDirection="row" height="25px">
+                <Slider
+                  min={0}
+                  max={90}
+                  step={10}
+                  onChange={this.onChange}
+                  marks={marks}
+                />
+
               </Flexbox>
+
+              <Flexbox flexDirection="row" justifyContent="space-between" className="number-labels">
+                <Flexbox flexDirection="row">
+                  <label>{this.state.value}%</label>
+                </Flexbox>
+                <Flexbox flexDirection="row" justifyContent="flex-end">
+                  <label>{100 - this.state.value}%</label>
+                </Flexbox>
+              </Flexbox>
+
             </Flexbox>
 
-            <Flexbox flexDirection="row" height="25px">
-              <Slider
-                min={0}
-                max={90}
-                step={10}
-                onChange={this.onChange}
-                marks={marks}
-              />
-
-            </Flexbox>
-
-            <Flexbox flexDirection="row" justifyContent="space-between" className="number-labels">
-              <Flexbox flexDirection="row">
-                <label>{this.state.value}%</label>
-              </Flexbox>
-              <Flexbox flexDirection="row" justifyContent="flex-end">
-                <label>{100 - this.state.value}%</label>
-              </Flexbox>
+            <Flexbox flexDirection="row" className="button-div">
+              <ProtectedButton
+                className={cx('allocation-button', { loading: inprogress })}
+                disabled={this.isSubmitButtonDisabled}
+                onClick={this.onSubmitButtonClicked}
+              >
+                {inprogress ? 'Voting' : 'Vote'}
+              </ProtectedButton>
             </Flexbox>
 
           </Flexbox>
 
-          <Flexbox flexDirection="row" className="button-div">
-            <ProtectedButton
-              className={cx('allocation-button', { loading: inprogress })}
-              disabled={this.isSubmitButtonDisabled}
-              onClick={this.onSubmitButtonClicked}
-            >
-              {inprogress ? 'Voting' : 'Vote'}
-            </ProtectedButton>
-          </Flexbox>
 
         </Flexbox>
-
+        <Flexbox className="allocation-response">
+          { this.renderSuccessResponse() }
+          { this.renderErrorResponse() }
+        </Flexbox>
       </Flexbox>
+
     )
   }
 
@@ -232,6 +266,7 @@ class Allocation extends Component<Props, State> {
           </Flexbox>
           <Flexbox flexDirection="row">
             { this.renderVote() }
+
             <Flexbox className="potential-outcome" flexDirection="column" flexGrow={1}>
               <label className="allocation-title">Potential Outcome</label>
               <div className="bar-chart">
