@@ -146,7 +146,7 @@ class SavedContracts extends Component<Props, State> {
             </Online>
             {
               <a
-                className="button small alert"
+                className="button secondary small"
                 aria-disabled={String(cannotDelete)}
                 onClick={() => this.onDeleteClicked(savedContract.contractId)}
                 title={cannotDelete ? 'Cant delete contract with matching asset (click for details)' : ''}
