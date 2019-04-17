@@ -16,7 +16,7 @@ class TxHistoryStore {
   @observable transactions = []
   @observable count = 0
   @observable pageIdx = 0
-  @observable pageSize = 5
+  @observable pageSize = 20
   @observable isFetchingCount = false
   @observable isFetchingTransactions = false
   fetchPollManager = new PollManager({
