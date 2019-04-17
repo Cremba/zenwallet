@@ -2,9 +2,9 @@
 
 import { ipcRenderer } from 'electron'
 
-const TESTNET_PORT = '31567'
+const TESTNET_PORT = '21567'
 const LOCAL_NET_PORT = '36000'
-const MAIN_NET_PORT = '31567'
+const MAIN_NET_PORT = '21567'
 const LOCALHOST = 'http://127.0.0.1'
 
 let chain = getInitialChain()
