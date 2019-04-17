@@ -35,7 +35,7 @@ class TxHistory extends Component<Props> {
   getDisplayAmount(tx) {
     const { asset, amount } = tx
     if (tx.amount === 0) return 'Vote'
-    const sign = tx.amount > 0 ? '+' : '-'
+    const sign = tx.amount > 0 ? '+' : ''
     return sign + normalizeTokens(amount, isZenAsset(asset))
   }
 
