@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 import classNames from 'classnames'
+import FontAwesomeIcon from '@fortawesome/react-fontawesome'
+
 
 import { kalapasToZen } from '../../utils/zenUtils'
 
@@ -65,8 +67,8 @@ class ChartLoader extends Component<Props, State> {
     if (this.chartLoading) {
       return (
         <span>
-          <i className="fas fa-var-spinner" />
-          loading
+          <FontAwesomeIcon icon={['fas', 'spinner']} />
+          { ' ' } loading
         </span>)
     }
     if (this.chartItems.length === 0) {

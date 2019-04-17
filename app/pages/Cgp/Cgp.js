@@ -153,7 +153,7 @@ class CGP extends Component<Props> {
         <Flexbox className="vote-box" flexDirection="column" >
           <h3 className="vote-title">How would you like to vote for next distribution?</h3>
           <Flexbox flexDirection="column" className="destination-address-input form-row">
-            <label htmlFor="to">Destination Address</label>
+            <label htmlFor="to">Proposal Address</label>
             <Flexbox flexDirection="row" className="destination-address-input">
 
               <Flexbox flexDirection="column" className="full-width relative">
@@ -162,7 +162,7 @@ class CGP extends Component<Props> {
                   ref={ref('elTo').bind(this)}
                   name="payoutAddress"
                   type="text"
-                  placeholder="Destination address"
+                  placeholder="Proposal address"
                   className={cx({ 'is-valid': this.isToValid, error: this.isToInvalid })}
                   onChange={this.updateAddressDisplay}
                   value={payoutAddress}
@@ -192,7 +192,7 @@ class CGP extends Component<Props> {
               shouldShowMaxAmount
               exceedingErrorMessage="Insufficient Funds"
               onAmountDisplayChanged={this.updateAmountDisplay}
-              label="Amount"
+              label="Requested Amount"
               classname="amount"
             />
           </Flexbox>

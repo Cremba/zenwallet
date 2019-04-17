@@ -45,24 +45,29 @@ class TxHistory extends Component<Props> {
         Header: 'Transaction Hash',
         id: 'txHash',
         accessor: tx => <CopyableTableCell string={tx.txHash} isTx isReactTable />,
+        headerStyle: { outline: 0 },
       },
       {
         Header: 'Asset Identifier',
         accessor: 'asset',
+        headerStyle: { outline: 0 },
       },
       {
         Header: 'Asset Name',
         id: 'assetName',
         accessor: tx => this.props.portfolioStore.getAssetName(tx.asset),
+        headerStyle: { outline: 0 },
       },
       {
         Header: 'Block',
         id: 'block',
         accessor: tx => this.blockNumber(tx),
+        headerStyle: { outline: 0 },
       },
       {
         Header: 'Confirmations',
         accessor: 'confirmations',
+        headerStyle: { outline: 0 },
       },
       {
         Header: () => <div className="align-right">Amount</div>,
@@ -72,6 +77,7 @@ class TxHistory extends Component<Props> {
             {this.getDisplayAmount(tx)}
           </div>
         ),
+        headerStyle: { outline: 0 },
       }]
   }
 
@@ -112,7 +118,9 @@ class TxHistory extends Component<Props> {
             pages={pagesCount}
             PaginationComponent={ReactTablePagination}
             className="align-left-headers"
-            minRows={1}
+            minRows={5}
+            resizable={false}
+            sortable={false}
             data={transactions}
             pageSize={pageSize}
             columns={this.columns}

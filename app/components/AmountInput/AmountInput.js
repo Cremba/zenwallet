@@ -61,7 +61,7 @@ class AmountInput extends React.Component<Props, State> {
     if (amount === undefined || amount === '') {
       newAmount = 1
     } else {
-      newAmount = amount + 1
+      newAmount = parseInt(amount, 10) + 1
     }
     onAmountDisplayChanged(String(newAmount))
   }
