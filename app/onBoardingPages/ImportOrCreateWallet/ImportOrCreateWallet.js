@@ -12,7 +12,7 @@ class ImportOrCreateWallet extends Component {
   render() {
     return (
       <OnBoardingLayout className="import-create-wallet-container" progressStep={1}>
-        <h1>Setting Up Your Wallet</h1>
+        <h1>Setting Up Your Yesod Wallet</h1>
         <h3>
           Create or Import your seed (24 word mnemonic passphrase)
         </h3>
