@@ -88,14 +88,6 @@ class Allocation extends Component<Props, State> {
     this.props.voteStore.allocationAmount = Number(values)
   }
 
-  getOutstanding = () => {
-    const { pastAllocation, outstanding, utilized } = this.props.voteStore
-    if (pastAllocation == null) {
-      return kalapasToZen(utilized + outstanding)
-    }
-    return kalapasToZen(outstanding)
-  }
-
   onSubmitButtonClicked = async (confirmedPassword: string) => {
     this.props.voteStore.createAllocationVote(confirmedPassword)
   }
@@ -244,14 +236,10 @@ class Allocation extends Component<Props, State> {
             </span>
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar" >
-            <BoxLabel
-              firstLine={`${this.getOutstanding()} ZP / ${kalapasToZen(zenCount)} ZP`}
-              secondLine="Outstanding votes"
-              className={cx(outstanding !== 0 ? 'box-row' : 'box')}
-            />
-            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining" />
-            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining" />
-            <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="Votes for next distribution" />
+            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
+            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
+            <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
+            <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
             <BoxLabel
               firstLine="Current Allocation"
               secondLine={(

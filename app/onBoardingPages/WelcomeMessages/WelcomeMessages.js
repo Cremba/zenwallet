@@ -84,7 +84,7 @@ class WelcomeMessages extends Component {
           <Flexbox flexGrow={2} />
           <Flexbox flexGrow={1} justifyContent="flex-end" flexDirection="row">
             {this.renderBackButton()}
-            <button className="button-on-right" onClick={this.onNextClicked} >I Understand</button>
+            <button className="button-on-right" onClick={this.onNextClicked} >Continue</button>
           </Flexbox>
         </Flexbox>
 

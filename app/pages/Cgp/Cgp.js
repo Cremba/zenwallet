@@ -235,14 +235,6 @@ class CGP extends Component<Props> {
     ))
   }
 
-  getOutstanding = () => {
-    const { pastPayout, outstanding, utilized } = this.props.voteStore
-    if (pastPayout == null) {
-      return kalapasToZen(utilized + outstanding)
-    }
-    return kalapasToZen(outstanding)
-  }
-
   renderResult() {
     const { resultPayout } = this.props.cgpStore
     return (
@@ -271,8 +263,6 @@ class CGP extends Component<Props> {
 
   render() {
     const { fund, totalPayoutAmountVoted } = this.props.cgpStore
-    const { outstanding, utilized } = this.props.voteStore
-    const zenCount = Number(utilized) + Number(outstanding)
     return (
       <Layout className="GCP">
         <Flexbox flexDirection="column" className="CGP-container">
@@ -293,15 +283,10 @@ class CGP extends Component<Props> {
             </span>
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar">
-            <BoxLabel
-              firstLine={`${this.getOutstanding()} ZP / ${kalapasToZen(zenCount)} ZP`}
-              secondLine="Outstanding votes"
-              className={cx(outstanding !== 0 ? 'box-row' : 'box')}
-            />
-            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining" />
-            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP`} secondLine="Available for next distribution" />
-            <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="Votes for next distribution" />
-            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining" />
+            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
+            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP`} secondLine="Fund in the CGP" />
+            <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
+            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
           </Flexbox>
           <Flexbox flexDirection="row" >
             <Flexbox flexDirection="column" flexGrow={1} >

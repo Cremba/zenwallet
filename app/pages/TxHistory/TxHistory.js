@@ -118,7 +118,7 @@ class TxHistory extends Component<Props> {
             pages={pagesCount}
             PaginationComponent={ReactTablePagination}
             className="align-left-headers"
-            minRows={5}
+            minRows={transactions ? 1 : 5}
             resizable={false}
             sortable={false}
             data={transactions}
