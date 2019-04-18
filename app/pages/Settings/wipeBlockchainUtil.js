@@ -44,7 +44,7 @@ const wipeBlockchain = async () => {
   }
   ipcRenderer.send(IPC_RESTART_ZEN_NODE, { wipeFull: true })
   secretPhraseStore.reset()
-  history.push(routes.IMPORT_OR_CREATE_WALLET)
+  history.push(routes.WELCOME_MESSAGES)
 }
 
 /* ************ Initial modal ************* */
