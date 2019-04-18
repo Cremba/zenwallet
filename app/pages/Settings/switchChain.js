@@ -1,10 +1,9 @@
 import swal from 'sweetalert'
 import { ipcRenderer } from 'electron'
 
-import db from '../../services/db'
 import history from '../../services/history'
 import { IPC_RESTART_ZEN_NODE } from '../../ZenNode'
-import { networkStore, secretPhraseStore, blockchainLogsStore } from '../../stores'
+import { networkStore, secretPhraseStore } from '../../stores'
 import { MAINNET } from '../../constants'
 import routes from '../../constants/routes'
 
@@ -18,7 +17,6 @@ const switchChain = async () => {
     args.isMining = false
     secretPhraseStore.setMining(false)
   }
-  db.set('blockchainLogs', blockchainLogsStore.logs).write()
   ipcRenderer.send(IPC_RESTART_ZEN_NODE, args)
   history.push(routes.LOADING)
 }
