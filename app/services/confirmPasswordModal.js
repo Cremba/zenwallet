@@ -2,8 +2,6 @@
 
 import swal from 'sweetalert'
 
-import { networkStore } from '../stores'
-import { MAINNET } from '../constants'
 
 import { postCheckPassword } from './api-service'
 
@@ -25,7 +23,7 @@ export default passwordModal
 function submitPasswordModal() {
   return swal({
     title: 'Password required',
-    text: networkStore.chain === MAINNET ? undefined : `Running on ${networkStore.chain} chain`,
+    text: 'Running on Yesod chain, please verify yourself',
     content: {
       element: 'input',
       attributes: {

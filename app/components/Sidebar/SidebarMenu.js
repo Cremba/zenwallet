@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { inject, observer } from 'mobx-react'
 import { NavLink } from 'react-router-dom'
-import { Online } from 'react-detect-offline'
 
 import routes from '../../constants/routes'
 
@@ -23,11 +22,11 @@ class SidebarMenu extends Component<Props> {
             Transactions <Badge n={newTxsCountSinceUserVisitedTransactionsPage} />
             </NavLink>
           </li>
-          <Online><li> <NavLink to={routes.ACTIVE_CONTRACTS} activeClassName="active">Active Contracts</NavLink></li></Online>
+          <li> <NavLink to={routes.ACTIVE_CONTRACTS} activeClassName="active">Active Contracts</NavLink></li>
           <li> <NavLink to={routes.SAVED_CONTRACTS} activeClassName="active">Saved Contracts</NavLink></li>
           <li> <NavLink to={routes.ALLOCATION} activeClassName="active">Mining Allocation</NavLink></li>
           <li> <NavLink to={routes.CGP} activeClassName="active">Cgp</NavLink></li>
-          <Online><li> <NavLink to={routes.BLOCKCHAIN_LOGS} activeClassName="active">Node Logs</NavLink></li></Online>
+          <li> <NavLink to={routes.BLOCKCHAIN_LOGS} activeClassName="active">Node Logs</NavLink></li>
           <li> <NavLink to={routes.SETTINGS} activeClassName="active">Settings</NavLink></li>
         </ul>
       </div>

@@ -4,10 +4,7 @@ import React, { Component } from 'react'
 import { inject, observer } from 'mobx-react'
 import cx from 'classnames'
 import Flexbox from 'flexbox-react'
-import { Offline } from 'react-detect-offline'
 
-import OfflineTopBar from '../../components/OfflineTopBar'
-import { SIDEBAR_WIDTH } from '../../constants/'
 import PortfolioStore from '../../stores/portfolioStore'
 
 type Props = {
@@ -32,7 +29,6 @@ class Header extends Component<Props> {
             <span className="zen-symbol">ZP</span>
           </div>
           <div className="account-balance">{portfolioStore.zenDisplay}</div>
-          <Offline><OfflineTopBar width={SIDEBAR_WIDTH} /></Offline>
         </div>
 
       </Flexbox>

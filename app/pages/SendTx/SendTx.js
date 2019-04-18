@@ -5,8 +5,6 @@ import Flexbox from 'flexbox-react'
 import { inject, observer } from 'mobx-react'
 import cx from 'classnames'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
-import { Offline, Online } from 'react-detect-offline'
-import QRCode from 'qrcode.react'
 
 import SendTxStore from '../../stores/sendTxStore'
 import PortfolioStore from '../../stores/portfolioStore'
@@ -17,13 +15,10 @@ import { ZENP_MAX_DECIMALS, ZENP_MIN_DECIMALS } from '../../constants'
 import Layout from '../../components/Layout'
 import IsValidIcon from '../../components/IsValidIcon'
 import ProtectedButton from '../../components/Buttons'
-import OfflineButton from '../../components/Buttons/OfflineButton'
 import AutoSuggestAssets from '../../components/AutoSuggestAssets'
 import FormResponseMessage from '../../components/FormResponseMessage'
 import AmountInput from '../../components/AmountInput'
 import PasteButton from '../../components/PasteButton'
-import ResetButton from '../../components/ResetButton'
-import Copy from '../../components/Copy'
 
 type Props = {
   sendTxStore: SendTxStore,
@@ -117,36 +112,6 @@ class SendTx extends Component<Props, State> {
     )
   }
 
-  // $FlowFixMe
-  renderRawTransactionBox(response) {
-    return (
-      this.state.isOfflineSent &&
-      <Offline>
-        <Flexbox flexDirection="column" className="offline-container">
-          <div className="input-container">
-            <Copy valueToCopy={response}>
-              <Copy.Label>Raw Transaction: </Copy.Label>
-              <Flexbox flexDirection="row" className="offline-button form-row">
-                <Copy.Input className="full-width input-container" />
-                <Copy.Button className="button-on-right" />
-                <ResetButton onClick={this.onReset} className="button-on-right" />
-              </Flexbox>
-              <Copy.ActiveMsg>
-                <Flexbox>
-                  <div className="bright-blue copied-to-clipboard-message">Raw transaction copied to clipboard</div>
-                </Flexbox>
-              </Copy.ActiveMsg>
-            </Copy>
-          </div>
-          <div className="input-container">
-            <h2 className="qrcode-text">Scan this to publish the transaction via the block explorer</h2>
-            <QRCode className="qrcode" value={this.explorerLink(response)} size={256} level="H" />
-          </div>
-        </Flexbox>
-      </Offline>
-    )
-  }
-
   explorerLink(response: string) {
     return `https://zp.io/broadcastTx/${response}`
   }
@@ -157,12 +122,6 @@ class SendTx extends Component<Props, State> {
     this.AutoSuggestAssets.wrappedInstance.reset()
   }
 
-  onSubmitOfflineButtonClicked = async (confirmedPassword: string) => {
-    this.state.isOfflineSent = true
-    this.props.sendTxStore.createRawTransaction(confirmedPassword)
-      .then(() => this.renderRawTransactionBox(this.props.sendTxStore.offlineResponse))
-      .catch((error) => error)
-  }
 
   get isAmountValid() {
     const { amount, asset } = this.props.sendTxStore
@@ -197,8 +156,7 @@ class SendTx extends Component<Props, State> {
         <Flexbox flexDirection="column" className="send-tx-container">
 
           <Flexbox className="page-title">
-            <Online><h1>Send</h1></Online>
-            <Offline><h1>Send ( Offline Mode )</h1></Offline>
+            <h1>Send</h1>
           </Flexbox>
 
           <Flexbox flexDirection="column" className="form-container">
@@ -253,35 +211,18 @@ class SendTx extends Component<Props, State> {
               />
             </Flexbox>
           </Flexbox>
-          <Flexbox className="middle-nav">
-            { this.renderRawTransactionBox(this.props.sendTxStore.offlineResponse) }
-          </Flexbox>
           <Flexbox flexDirection="row">
-            <Online>{ this.renderSuccessResponse() }</Online>
+            { this.renderSuccessResponse() }
             { this.renderErrorResponse() }
             <Flexbox flexGrow={2} />
             <Flexbox flexGrow={1} justifyContent="flex-end" flexDirection="row">
-              <Online>
-                <ProtectedButton
-                  className={cx('button-on-right', { loading: inprogress })}
-                  disabled={this.isSubmitButtonDisabled}
-                  onClick={this.onSubmitButtonClicked}
-                >
-                  {inprogress ? 'Sending' : 'Send'}
-                </ProtectedButton>
-              </Online>
-              <Offline>
-                { !this.state.isOfflineSent &&
-                <OfflineButton
-                  className={cx('button-on-right', { loading: inprogress })}
-                  disabled={this.isSubmitButtonDisabled}
-                  // $FlowFixMe
-                  onClick={this.onSubmitOfflineButtonClicked}
-                >
-                  {inprogress ? 'Generating' : 'Generate Raw Transaction'}
-                </OfflineButton> }
-                { !this.state.isOfflineSent && <ResetButton onClick={this.onWrappedInstanceReset} className="button-on-right" /> }
-              </Offline>
+              <ProtectedButton
+                className={cx('button-on-right', { loading: inprogress })}
+                disabled={this.isSubmitButtonDisabled}
+                onClick={this.onSubmitButtonClicked}
+              >
+                {inprogress ? 'Sending' : 'Send'}
+              </ProtectedButton>
             </Flexbox>
           </Flexbox>
         </Flexbox>
