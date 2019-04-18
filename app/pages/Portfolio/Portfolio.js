@@ -31,7 +31,7 @@ class Balances extends Component<Props> {
         <tr>
           <td className="align-left text" title={asset.name}>{asset.name}</td>
           <CopyableTableCell string={asset.asset} />
-          <td className="bright-blue" title={asset.balance}>
+          <td className="white" title={asset.balance}>
             {asset.balanceDisplay}
           </td>
           <td className="align-right" >

@@ -251,6 +251,7 @@ class CGP extends Component<Props> {
     const { amount, recipient } = payoutVote[index]
     this.updateAmountDisplay((parseInt(amount, 10)))
     this.props.voteStore.payoutAddress = recipient
+    setTimeout(() => { this.setState({ selected: '' }) }, 2000)
   }
 
   renderResult() {
@@ -311,9 +312,9 @@ class CGP extends Component<Props> {
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar">
             <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
-            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP`} secondLine="Funds in the CGP" />
-            <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
             <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
+            <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
+            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP`} secondLine="Funds in the CGP" />
           </Flexbox>
           <Flexbox flexDirection="row" >
             <Flexbox flexDirection="column" flexGrow={1} >

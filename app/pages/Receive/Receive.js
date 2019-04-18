@@ -40,7 +40,7 @@ class Receive extends Component<Props> {
               )}
               <Copy.ActiveMsg>
                 <Flexbox>
-                  <div className="bright-blue copied-to-clipboard-message">Public address copied to clipboard</div>
+                  <div className="white copied-to-clipboard-message">Public address copied to clipboard</div>
                 </Flexbox>
               </Copy.ActiveMsg>
             </Copy>
@@ -64,7 +64,7 @@ class Receive extends Component<Props> {
                   )}
                     <Flexbox>
                       <Copy.ActiveMsg>
-                        <div className="bright-blue copied-to-clipboard-message">PkHash copied to clipboard</div>
+                        <div className="white copied-to-clipboard-message">PkHash copied to clipboard</div>
                       </Copy.ActiveMsg>
                     </Flexbox>
                   </Copy>
