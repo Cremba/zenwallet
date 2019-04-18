@@ -311,7 +311,7 @@ class CGP extends Component<Props> {
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar">
             <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
-            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP`} secondLine="Fund in the CGP" />
+            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP`} secondLine="Funds in the CGP" />
             <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
             <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
           </Flexbox>
@@ -333,10 +333,10 @@ class CGP extends Component<Props> {
                     resizable={false}
                     sortable={false}
                     PaginationComponent={ReactTablePagination}
-                    data={payoutVote}
+                    data={error === 'No Data' ? [] : payoutVote}
                     showPagination={payoutVote.length > 6}
                     columns={this.columns}
-                    loading={error === 'No Data' || status === 'success'}
+                    loading={status === 'success'}
                     previousText={<FontAwesomeIcon icon={['fas', 'angle-double-left']} />}
                     nextText={<FontAwesomeIcon icon={['fas', 'angle-double-right']} />}
                     getTrProps={(state, rowInfo) => {

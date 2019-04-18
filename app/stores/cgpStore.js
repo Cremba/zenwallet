@@ -51,7 +51,8 @@ class CgpStore {
           this.allocationVote = currentTally.allocation ? currentTally.allocation.votes : []
           this.totalAllocationAmountVoted = this.getAmountVoted(this.allocationVote)
           this.payoutVote = currentTally.payout ? this.setData(currentTally.payout.votes) : []
-          this.totalPayoutAmountVoted = this.getAmountVoted(this.payoutVote)
+          this.totalPayoutAmountVoted =
+            this.getAmountVoted(currentTally.payout.votes ? currentTally.payout.votes : [])
           this.error = ''
         }
       })

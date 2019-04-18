@@ -3,12 +3,10 @@ import { Provider } from 'mobx-react'
 import MobxDevTools from 'mobx-react-devtools'
 import ErrorBoundary from 'react-error-boundary'
 import 'react-table/react-table.css'
-import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 import ErrorScreen from './pages/ErrorScreen'
 import AppUpdater from './components/AppUpdater'
-import ToastCloseBtn from './components/ToastCloseBtn'
 import WipeModal from './components/WipeModal'
 import Idle from './components/Idle'
 import history from './services/history'
@@ -30,7 +28,6 @@ export default class App extends React.Component {
               <Routes />
             </div>
             {process.env.NODE_ENV !== 'production' && <MobxDevTools />}
-            <ToastContainer closeButton={<ToastCloseBtn />} />
           </React.Fragment>
         </ErrorBoundary>
       </Provider>
