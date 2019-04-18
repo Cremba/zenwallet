@@ -1,12 +1,12 @@
 // @flow
 
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 import { inject, observer } from 'mobx-react'
 import Flexbox from 'flexbox-react'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 import cx from 'classnames'
 import moment from 'moment'
-import { isEmpty } from 'lodash'
+import ReactTable from 'react-table'
 
 import PasteButton from '../../components/PasteButton'
 import { ref } from '../../utils/domUtils'
@@ -22,8 +22,7 @@ import AmountInput from '../../components/AmountInput'
 import { ZENP_MAX_DECIMALS, ZENP_MIN_DECIMALS } from '../../constants'
 import ProtectedButton from '../../components/Buttons'
 import { kalapasToZen } from '../../utils/zenUtils'
-
-import SingleVoteDelta from './SingleVoteDelta'
+import ReactTablePagination from '../../components/ReactTablePagination'
 
 
 const intervalLength = 100
@@ -89,6 +88,29 @@ class CGP extends Component<Props> {
     }
   }
 
+
+  get columns() {
+    return [
+      {
+        Header: 'Proposal Address',
+        id: 'recipient',
+        accessor: 'recipient',
+        headerStyle: { outline: 0 },
+      },
+      {
+        Header: 'Requested Amount',
+        id: 'amount',
+        accessor: 'amount',
+        headerStyle: { outline: 0 },
+      },
+      {
+        Header: 'Votes',
+        id: 'count',
+        accessor: 'count',
+        headerStyle: { outline: 0 },
+      }]
+  }
+
   renderErrorResponse() {
     const { status, errorMessage } = this.props.voteStore
     if (status !== 'error') {
@@ -112,6 +134,13 @@ class CGP extends Component<Props> {
         <span>Successfully voted, the vote will appear after a mined block.</span>
       </FormResponseMessage>
     )
+  }
+
+  getData(payoutVote) {
+    return payoutVote.map((item) => {
+      const { amount, recipient, count } = item
+      return [{ amount, recipient, count }]
+    })
   }
 
   updateAmountDisplay = (amountDisplay) => {
@@ -190,7 +219,7 @@ class CGP extends Component<Props> {
               minDecimal={ZENP_MIN_DECIMALS}
               maxAmount={fund ? kalapasToZen(fund) : 0}
               shouldShowMaxAmount
-              exceedingErrorMessage="Insufficient Funds"
+              exceedingErrorMessage="Insufficient tokens in the CGP fund"
               onAmountDisplayChanged={this.updateAmountDisplay}
               label="Requested Amount"
               classname="amount"
@@ -217,22 +246,6 @@ class CGP extends Component<Props> {
   onRowClicked = (vote) => {
     this.updateAmountDisplay(kalapasToZen(vote.amount))
     this.props.voteStore.payoutAddress = vote.recipient
-  }
-
-  renderRows() {
-    const { cgpStore } = this.props
-    console.log(cgpStore.payoutVote)
-    if (isEmpty(cgpStore.payoutVote)) {
-      return this.renderErrorResponse()
-    }
-    return cgpStore.payoutVote.map((vote, index) => (
-      <Fragment key={`${vote.recipient}-${index}`}>
-        <tr onClick={this.onRowClicked.bind(this, vote)}>
-          <SingleVoteDelta vote={vote} />
-        </tr>
-        <tr className="separator" />
-      </Fragment>
-    ))
   }
 
   renderResult() {
@@ -262,25 +275,35 @@ class CGP extends Component<Props> {
   }
 
   render() {
-    const { fund, totalPayoutAmountVoted } = this.props.cgpStore
+    const {
+      cgpStore: {
+        fund, totalPayoutAmountVoted, payoutVote, error,
+      },
+      voteStore: {
+        status,
+      },
+    } = this.props
+    console.log(payoutVote)
     return (
       <Layout className="GCP">
         <Flexbox flexDirection="column" className="CGP-container">
-          <Flexbox className="page-title" justifyContent="space-between" flexDirection="column">
-            <h1>Common Goods Pool</h1>
-            <h3 className="page-title" >
-              Every 10,000 blocks (100 blocks for the testnet)
-              funds are distributed from the CGP to the winning proposal.
-              Users can influence the outcome on a coin-weighted basis by voting on their
-              preferred proposal prior to the end of the interval.
-              A proposal ‘ballot’ consists of both an <span className="bold">address</span> and an <span className="bold">amount</span>.
-              Note that ‘ballots’ which pay to the same address
-              but a different amount will be considered different ballots.
-            </h3>
-            <hr className="line-break" />
-            <span className="page-subtitle">
-              Next estimated distribution: {this.calcNextDistribution().format('MMMM DD, YYYY')}
-            </span>
+          <Flexbox justifyContent="space-between" flexDirection="column">
+            <Flexbox flexDirection="column" className="page-title">
+              <h1>Common Goods Pool</h1>
+              <h3 >
+                Every 10,000 blocks (100 blocks for the testnet)
+                funds are distributed from the CGP to the winning proposal.
+                Users can influence the outcome on a coin-weighted basis by voting on their
+                preferred proposal prior to the end of the interval.
+                A proposal ‘ballot’ consists of both an <span className="bold">address</span> and an <span className="bold">amount</span>.
+                Note that ‘ballots’ which pay to the same address
+                but a different amount will be considered different ballots.
+              </h3>
+              <hr className="line-break" />
+              <span className="page-subtitle">
+                Next estimated distribution: {this.calcNextDistribution().format('MMMM DD, YYYY')}
+              </span>
+            </Flexbox>
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar">
             <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
@@ -299,19 +322,20 @@ class CGP extends Component<Props> {
               <Flexbox className="proposal" flexDirection="column" >
                 <h3 className="vote-title">Current Distribution Votes</h3>
                 <Flexbox flexDirection="row" flexGrow={1} >
-                  <table>
-                    <thead>
-                      <tr>
-                        <th className="align-left">Proposal Address</th>
-                        <th className="align-left">Requested Amount</th>
-                        <th className="align-left">Votes</th>
-                      </tr>
-                      <tr className="separator" />
-                    </thead>
-                    <tbody>
-                      { !!this.props.cgpStore && this.renderRows() }
-                    </tbody>
-                  </table>
+                  <ReactTable
+                    manual
+                    className="align-left-headers"
+                    minRows={6}
+                    resizable={false}
+                    sortable={false}
+                    PaginationComponent={ReactTablePagination}
+                    data={payoutVote}
+                    showPagination={payoutVote.length > 6}
+                    columns={this.columns}
+                    loading={error === 'No Data' || status === 'success'}
+                    previousText={<FontAwesomeIcon icon={['fas', 'angle-double-left']} />}
+                    nextText={<FontAwesomeIcon icon={['fas', 'angle-double-right']} />}
+                  />
                 </Flexbox>
               </Flexbox>
             </Flexbox>

@@ -223,7 +223,7 @@ class Allocation extends Component<Props, State> {
         <Flexbox flexDirection="column" className="allocation-container">
           <Flexbox className="page-title" flexDirection="column">
             <h1>Mining Allocation</h1>
-            <h3 className="page-title">
+            <h3>
               Vote for your preferred division of fund allocation
               between miners and the Common Goods Pool.
               Users can influence the outcome on a coin-weighted basis by
