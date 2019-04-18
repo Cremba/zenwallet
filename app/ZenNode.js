@@ -3,7 +3,6 @@
 // otherwise packing for npm breaks the path for the zen node
 import path from 'path'
 
-import compare from 'semver-compare'
 import _ from 'lodash'
 import { ipcMain, dialog } from 'electron'
 import spwanZenNodeChildProcess from '@zen/zen-node'
@@ -20,7 +19,7 @@ export const IPC_BLOCKCHAIN_LOGS = 'blockchainLogs'
 export const ZEN_NODE_RESTART_SIGNAL = 'SIGKILL'
 
 class ZenNode {
-  static zenNodeVersionRequiredWipe = doesZenNodeVersionRequiredWipe()
+  static zenNodeVersionRequiredWipe = false
   ipcMessagesToSendOnFinishedLoad = []
   logs = []
   webContentsFinishedLoad = false
@@ -166,6 +165,7 @@ class ZenNode {
     }
     args.push('--test')
     args.push('--data-path', 'data/test-beta')
+    args.push('--api', '127.0.0.1:21567')
 
 
     if (process.env.ZEN_NODE_API_PORT) {
@@ -205,33 +205,6 @@ function getInitialNet() {
     return 'test'
   }
   return ''
-}
-
-function doesZenNodeVersionRequiredWipe() {
-  let latestZenNodeVersionRequiringWipe = '0.9.11'
-  if (getInitialNet() === 'test') {
-    latestZenNodeVersionRequiringWipe = '0.9.28'
-  }
-  // first time user installs a version of the wallet with this flag feature,
-  // or when user resets his local DB for any reason, we use the mocked version 0.0.0
-  // to make sure wipe will happen, in case user has non valid chain
-  const mockNoWipeRecordVersion = '0.0.0'
-  const lastWipedOnZenNodeVersion = db.get('lastWipe.zenNodeVersion').value() || mockNoWipeRecordVersion
-  const isWipeNeeded = compare(latestZenNodeVersionRequiringWipe, lastWipedOnZenNodeVersion) === 1
-  if (isWipeNeeded) {
-    logWipeNeeded(latestZenNodeVersionRequiringWipe, lastWipedOnZenNodeVersion, mockNoWipeRecordVersion) // eslint-disable-line max-len
-  }
-  return isWipeNeeded
-}
-
-// eslint-disable-next-line max-len
-function logWipeNeeded(latestZenNodeVersionRequiringWipe, lastWipedOnZenNodeVersion, mockNoWipeRecordVersion) {
-  console.log(`
-  [********** ZEN NODE VERSION REQUIRES WIPE **********]
-  Last version requiring wipe: ${latestZenNodeVersionRequiringWipe}
-  Last wiped on version: ${lastWipedOnZenNodeVersion === mockNoWipeRecordVersion ? 'no local record of wiping found' : lastWipedOnZenNodeVersion}
-  [********** /ZEN NODE VERSION REQUIRES WIPE **********]
-  `)
 }
 
 function initialNetIsMainnet() {
