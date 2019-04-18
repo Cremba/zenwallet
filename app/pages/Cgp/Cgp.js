@@ -37,6 +37,9 @@ type Props = {
 @inject('cgpStore', 'networkStore', 'voteStore')
 @observer
 class CGP extends Component<Props> {
+  state = {
+    selected: '',
+  }
   componentDidMount() {
     this.props.cgpStore.initPolling()
     this.props.networkStore.initPolling()
@@ -94,7 +97,7 @@ class CGP extends Component<Props> {
       {
         Header: 'Proposal Address',
         id: 'recipient',
-        accessor: 'recipient',
+        accessor: vote => truncateString(vote.recipient),
         headerStyle: { outline: 0 },
       },
       {
@@ -243,9 +246,11 @@ class CGP extends Component<Props> {
     )
   }
 
-  onRowClicked = (vote) => {
-    this.updateAmountDisplay(kalapasToZen(vote.amount))
-    this.props.voteStore.payoutAddress = vote.recipient
+  onRowClicked = (index) => {
+    const { payoutVote } = this.props.cgpStore
+    const { amount, recipient } = payoutVote[index]
+    this.updateAmountDisplay((parseInt(amount, 10)))
+    this.props.voteStore.payoutAddress = recipient
   }
 
   renderResult() {
@@ -283,7 +288,6 @@ class CGP extends Component<Props> {
         status,
       },
     } = this.props
-    console.log(payoutVote)
     return (
       <Layout className="GCP">
         <Flexbox flexDirection="column" className="CGP-container">
@@ -335,6 +339,24 @@ class CGP extends Component<Props> {
                     loading={error === 'No Data' || status === 'success'}
                     previousText={<FontAwesomeIcon icon={['fas', 'angle-double-left']} />}
                     nextText={<FontAwesomeIcon icon={['fas', 'angle-double-right']} />}
+                    getTrProps={(state, rowInfo) => {
+                      if (rowInfo && rowInfo.row) {
+                        return {
+                          onClick: () => {
+                            this.setState({
+                              selected: rowInfo.index,
+                            })
+                            this.onRowClicked(rowInfo.index)
+                          },
+                          style: {
+                            background: rowInfo.index === this.state.selected ? 'white' : '',
+                            color: rowInfo.index === this.state.selected ? 'black' : '',
+                          },
+                        }
+                      }
+                        return {}
+                    }
+                  }
                   />
                 </Flexbox>
               </Flexbox>

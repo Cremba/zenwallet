@@ -4,7 +4,6 @@ import { isEmpty } from 'lodash'
 import { getCgp, getGenesisTimestamp } from '../services/api-service'
 import PollManager from '../utils/PollManager'
 import { kalapasToZen } from '../utils/zenUtils'
-import { truncateString } from '../utils/helpers'
 
 
 class CgpStore {
@@ -69,7 +68,7 @@ class CgpStore {
   setData(payoutVote) {
     return payoutVote.map(vote => {
       const { recipient, amount, count } = vote
-      return { recipient: truncateString(recipient), amount: `${kalapasToZen(amount)} ZP`, count: `${kalapasToZen(count)} ZP` }
+      return { recipient, amount: `${kalapasToZen(amount)} ZP`, count: `${kalapasToZen(count)} ZP` }
     })
   }
 
