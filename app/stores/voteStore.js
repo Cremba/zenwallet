@@ -13,7 +13,6 @@ class VoteStore {
   @observable outstanding = -1
   @observable utilized = -1
   @observable inprogress = false
-  @observable status = ''
   @observable errorMessage = ''
   fetchPollManager = new PollManager({
     name: 'Vote Store fetch',
@@ -66,9 +65,9 @@ class VoteStore {
       runInAction(() => {
         console.log('createAllocationVote response', response)
         this.reset()
-        this.status = 'success'
+        this.statusAllocation = 'success'
         setTimeout(() => {
-          this.status = ''
+          this.statusAllocation = ''
         }, 15000)
       })
     } catch (error) {
@@ -77,9 +76,9 @@ class VoteStore {
         this.errorMessage = error.response.data
       })
       this.inprogress = false
-      this.status = 'error'
+      this.statusAllocation = 'error'
       setTimeout(() => {
-        this.status = ''
+        this.statusAllocation = ''
       }, 15000)
     }
   }
@@ -101,9 +100,9 @@ class VoteStore {
       runInAction(() => {
         console.log('createPayoutVote response', response)
         this.reset()
-        this.status = 'success'
+        this.statusPayout = 'success'
         setTimeout(() => {
-          this.status = ''
+          this.statusPayout = ''
         }, 15000)
       })
     } catch (error) {
@@ -112,9 +111,9 @@ class VoteStore {
         this.errorMessage = error.response.data
       })
       this.inprogress = false
-      this.status = 'error'
+      this.statusPayout = 'error'
       setTimeout(() => {
-        this.status = ''
+        this.statusPayout = ''
       }, 15000)
     }
   }
@@ -134,7 +133,8 @@ class VoteStore {
     this.payoutAddress = ''
     this.payoutAmount = ''
     this.inprogress = false
-    this.status = ''
+    this.statusAllocation = ''
+    this.statusPayout = ''
     this.errorMessage = ''
   }
 }

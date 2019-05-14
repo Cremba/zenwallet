@@ -5,7 +5,7 @@ import Flexbox from 'flexbox-react'
 import moment from 'moment'
 import cx from 'classnames'
 import * as mobx from 'mobx'
-import { isEmpty } from 'lodash'
+import { isEmpty, isNumber } from 'lodash'
 
 import CgpStore from '../../stores/cgpStore'
 import NetworkStore from '../../stores/networkStore'
@@ -84,8 +84,9 @@ class Allocation extends Component<Props, State> {
   }
 
   onChange = values => {
+    console.log(values)
     this.setState({ value: values })
-    this.props.voteStore.allocationAmount = Number(values)
+    this.props.voteStore.allocationAmount = +values
   }
 
   onSubmitButtonClicked = async (confirmedPassword: string) => {
@@ -93,7 +94,7 @@ class Allocation extends Component<Props, State> {
   }
 
   renderSuccessResponse() {
-    if (this.props.voteStore.status !== 'success') {
+    if (this.props.voteStore.statusAllocation !== 'success') {
       return null
     }
     return (
@@ -104,8 +105,8 @@ class Allocation extends Component<Props, State> {
   }
 
   renderErrorResponse() {
-    const { status, errorMessage } = this.props.voteStore
-    if (status !== 'error') {
+    const { statusAllocation, errorMessage } = this.props.voteStore
+    if (statusAllocation !== 'error') {
       return null
     }
     return (
@@ -119,6 +120,7 @@ class Allocation extends Component<Props, State> {
 
   get areAllFieldsValid() {
     const { allocationAmount } = this.props.voteStore
+    if (!isNumber(allocationAmount)) return false
     return !!((allocationAmount >= 0) &&
       (allocationAmount <= 100))
   }
@@ -214,7 +216,7 @@ class Allocation extends Component<Props, State> {
         totalAllocationAmountVoted, resultAllocation,
       },
       voteStore: {
-        outstanding, utilized, pastAllocation, status,
+        outstanding, utilized, pastAllocation, statusAllocation,
       },
     } = this.props
     const zenCount = Number(utilized) + Number(outstanding)
@@ -261,7 +263,7 @@ class Allocation extends Component<Props, State> {
                 <ChartLoader
                   chartName="currentVotes"
                   externalChartData={this.getData}
-                  externalChartLoading={status === 'success'}
+                  externalChartLoading={statusAllocation === 'success'}
                   current={[{
                     amount: this.state.value,
                     count: pastAllocation === this.state.value ? outstanding : zenCount,

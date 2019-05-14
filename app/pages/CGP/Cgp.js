@@ -116,8 +116,8 @@ class CGP extends Component<Props> {
   }
 
   renderErrorResponse() {
-    const { status, errorMessage } = this.props.voteStore
-    if (status !== 'error') {
+    const { statusPayout, errorMessage } = this.props.voteStore
+    if (statusPayout !== 'error') {
       return null
     }
     return (
@@ -130,7 +130,7 @@ class CGP extends Component<Props> {
   }
 
   renderSuccessResponse() {
-    if (this.props.voteStore.status !== 'success') {
+    if (this.props.voteStore.statusPayout !== 'success') {
       return null
     }
     return (
@@ -291,7 +291,7 @@ class CGP extends Component<Props> {
         fund, totalFund, totalPayoutAmountVoted, payoutVote, error,
       },
       voteStore: {
-        status,
+        statusPayout,
       },
     } = this.props
     return (
@@ -342,8 +342,8 @@ class CGP extends Component<Props> {
                     data={error === 'No Data' ? [] : payoutVote}
                     showPagination={payoutVote.length >= 6}
                     columns={this.columns}
-                    LoadingComponent={status === 'success' ? Loading : React.Fragment.defaultProps}
-                    loading={status === 'success'}
+                    LoadingComponent={statusPayout === 'success' ? Loading : React.Fragment.defaultProps}
+                    loading={statusPayout === 'success'}
                     previousText={<FontAwesomeIcon icon={['fas', 'angle-double-left']} />}
                     nextText={<FontAwesomeIcon icon={['fas', 'angle-double-right']} />}
                     getTrProps={(state, rowInfo) => {

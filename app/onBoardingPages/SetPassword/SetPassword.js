@@ -168,7 +168,7 @@ class SetPassword extends Component<Props, State> {
           <Flexbox flexDirection="row" className="password-form-container" >
             <Flexbox flexDirection="column" flexGrow={1}>
               <h5>Auto logout</h5>
-              <p>After how many minutes you would like to automatically log out?</p>
+              <p>Automatically log out after this period of inactivity</p>
             </Flexbox>
             <Flexbox flexDirection="column" flexGrow={0} justifyContent="flex-end" >
               <div className="input-group">
