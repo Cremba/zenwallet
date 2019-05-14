@@ -16,6 +16,7 @@ export default function Loading({ className, loadingText, ...props }) {
 
 Loading.propTypes = {
   loadingText: PropTypes.string,
+  // eslint-disable-next-line
   className: PropTypes.string,
 }
 

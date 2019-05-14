@@ -13,8 +13,8 @@ export default function BarChart(props) {
     },
     xAxis: {
       type: xAxisType,
-      min: 1,
-      max: 100,
+      min: 0,
+      max: 99,
       labels: {
         rotation: -45,
         style: {

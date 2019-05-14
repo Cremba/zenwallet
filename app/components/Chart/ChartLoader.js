@@ -6,6 +6,7 @@ import { isEmpty } from 'lodash'
 
 
 import { kalapasToZen } from '../../utils/zenUtils'
+import Loading from '../Loading'
 
 import BarChart from './BarChart'
 
@@ -68,9 +69,9 @@ class ChartLoader extends Component<Props, State> {
     if (this.chartLoading) {
       return (
         <span>
-          <FontAwesomeIcon icon={['fas', 'spinner']} spin />
-          { ' ' } loading
-        </span>)
+          <Loading className="loading-in" />
+        </span>
+      )
     }
     if (isEmpty(this.chartItems)) {
       return (

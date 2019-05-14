@@ -169,7 +169,7 @@ class Allocation extends Component<Props, State> {
                   defaultValue={this.state.value}
                   min={0}
                   max={90}
-                  step={10}
+                  step={5}
                   onChange={this.onChange}
                   marks={marks}
                 />
@@ -259,7 +259,7 @@ class Allocation extends Component<Props, State> {
 
             <Flexbox className="potential-outcome" flexDirection="column" flexGrow={1}>
               <label className="allocation-title">Potential Outcome</label>
-              <div className="bar-chart">
+              <Flexbox flexDirection="row" flexGrow={1} >
                 <ChartLoader
                   chartName="currentVotes"
                   externalChartData={this.getData}
@@ -270,7 +270,7 @@ class Allocation extends Component<Props, State> {
                   }]}
                   // TODO: add onclick event
                 />
-              </div>
+              </Flexbox>
             </Flexbox>
           </Flexbox>
         </Flexbox>

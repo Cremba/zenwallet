@@ -1,7 +1,7 @@
 import { observable, action, runInAction } from 'mobx'
 import { isEmpty } from 'lodash'
 
-import { getCgp, getGenesisTimestamp, getCgpHistory } from '../services/api-service'
+import { getCgp, getGenesisTimestamp } from '../services/api-service'
 import PollManager from '../utils/PollManager'
 import { kalapasToZen } from '../utils/zenUtils'
 
@@ -40,17 +40,19 @@ class CgpStore {
   async fetch() {
     try {
       const cgp = await getCgp()
-      const cgpHistory = await getCgpHistory()
       const { tallies } = cgp
       const currentInterval =
         Math.floor(this.networkStore.headers / this.intervalLength)
       runInAction(() => {
-        this.pastFund =
-          cgpHistory.map(data => data.fund).reduce((total, pastFund) => +total + pastFund)
+        // this.pastFund =
+        //   cgpHistory.map(data => data.fund).reduce((total, pastFund) => +total + pastFund)
         this.resultAllocation = cgp.resultAllocation
         this.resultPayout = cgp.resultPayout
         this.fund = cgp.fund
-        this.totalFund = +this.pastFund + (this.intervalLength * (this.resultAllocation / 100) * 50)
+        this.totalFund = kalapasToZen(+this.fund) +
+          ((((currentInterval + 1) * (this.intervalLength)) - this.networkStore.headers)
+            * ((this.resultAllocation / 100) * 50))
+        console.log(this.totalFund)
         if (isEmpty(tallies)) this.error = 'No Data'
         else {
           const currentTally = tallies.filter(data => data.interval === currentInterval)[0]

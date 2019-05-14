@@ -94,6 +94,14 @@
   .bar-chart { padding: 10px; }
 }
 
+.loading-in {
+  margin-top: -30px;
+  display: block;
+  position: relative;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
 .dot {
   height: 10px;
   width: 10px;
