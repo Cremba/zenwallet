@@ -286,6 +286,16 @@ export async function postImportWallet(secretPhraseArray: observableArray, passw
   return response
 }
 
+export async function postRemoveWallet(password: string) {
+  const data = {
+    password,
+  }
+  const response = await axios.post(`${getServerAddress()}/wallet/remove`, data, {
+    headers: { 'Content-Type': 'application/json' },
+  })
+  return response
+}
+
 export async function postCheckPassword(password: string) {
   const data = { password }
   const response = await axios.post(`${getServerAddress()}/wallet/checkpassword`, data, {

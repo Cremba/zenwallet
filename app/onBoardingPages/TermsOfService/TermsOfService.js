@@ -1,7 +1,6 @@
 /* eslint-disable react/no-unescaped-entities,max-len,no-irregular-whitespace */
 
 import React, { Component } from 'react'
-import { Link } from 'react-router-dom'
 import Flexbox from 'flexbox-react'
 import Checkbox from 'rc-checkbox'
 import { observer, inject } from 'mobx-react'
@@ -10,7 +9,8 @@ import ErrorReportingStore from '../../stores/errorReportingStore'
 import OnBoardingLayout from '../Layout/Layout'
 import history from '../../services/history'
 import routes from '../../constants/routes'
-import { postRedeemCrowdsaleTokens } from '../../services/api-service'
+import { postRedeemCrowdsaleTokens, postRemoveWallet } from '../../services/api-service'
+import ProtectedButton from '../../components/Buttons/ProtectedButton'
 
 type Props = {
   errorReportingStore: ErrorReportingStore
@@ -25,6 +25,11 @@ class TermsOfService extends Component<Props> {
 
   onChange = (evt) => {
     this.setState({ checked: evt.target.checked })
+  }
+
+  onBack = async (confirmedPassword: string) => {
+    await postRemoveWallet(confirmedPassword)
+    history.push(routes.IMPORT_OR_CREATE_WALLET)
   }
 
   onNext = () => {
@@ -745,7 +750,7 @@ class TermsOfService extends Component<Props> {
           </Flexbox>
           <Flexbox flexGrow={2} />
           <Flexbox flexGrow={1} justifyContent="flex-end" flexDirection="row">
-            <Link className="button secondary" to={routes.IMPORT_OR_CREATE_WALLET}>Back</Link>
+            <ProtectedButton onClick={this.onBack} className="button secondary"> Back </ProtectedButton>
             <button
               disabled={!checked}
               className="button-on-right"
