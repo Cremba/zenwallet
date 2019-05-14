@@ -18,7 +18,7 @@ class NetworkStore {
   fetchPollManager = new PollManager({
     name: 'Network fetch',
     fnToPoll: this.fetch,
-    timeoutInterval: 2500,
+    timeoutInterval: 1500,
   })
 
   @action

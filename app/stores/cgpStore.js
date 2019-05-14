@@ -1,12 +1,13 @@
 import { observable, action, runInAction } from 'mobx'
 import { isEmpty } from 'lodash'
 
-import { getCgp, getGenesisTimestamp } from '../services/api-service'
+import { getCgp, getGenesisTimestamp, getCgpHistory } from '../services/api-service'
 import PollManager from '../utils/PollManager'
 import { kalapasToZen } from '../utils/zenUtils'
 
 
 class CgpStore {
+  @observable intervalLength = 100 // TODO: edit 100 for final release
   @observable allocationVote = []
   @observable resultAllocation = ''
   @observable totalPayoutVoted = 0
@@ -14,6 +15,7 @@ class CgpStore {
   @observable payoutVote = [Object]
   @observable resultPayout = ''
   @observable error = ''
+  @observable totalFund = 0
   @observable genesisTimestamp = 0
   fetchPollManager = new PollManager({
     name: 'Cgp fetch',
@@ -38,15 +40,20 @@ class CgpStore {
   async fetch() {
     try {
       const cgp = await getCgp()
+      const cgpHistory = await getCgpHistory()
+      const { tallies } = cgp
       const currentInterval =
-        Math.floor(this.networkStore.headers / 100) // TODO: edit 100 for final release
+        Math.floor(this.networkStore.headers / this.intervalLength)
       runInAction(() => {
+        this.pastFund =
+          cgpHistory.map(data => data.fund).reduce((total, pastFund) => +total + pastFund)
         this.resultAllocation = cgp.resultAllocation
         this.resultPayout = cgp.resultPayout
         this.fund = cgp.fund
-        if (isEmpty(cgp.tallies)) this.error = 'No Data'
+        this.totalFund = +this.pastFund + (this.intervalLength * (this.resultAllocation / 100) * 50)
+        if (isEmpty(tallies)) this.error = 'No Data'
         else {
-          const currentTally = cgp.tallies.filter(data => data.interval === currentInterval)[0]
+          const currentTally = tallies.filter(data => data.interval === currentInterval)[0]
           this.interval = currentTally.interval
           this.allocationVote = currentTally.allocation ? currentTally.allocation.votes : []
           this.totalAllocationAmountVoted = this.getAmountVoted(this.allocationVote)

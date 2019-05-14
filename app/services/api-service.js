@@ -56,6 +56,11 @@ export async function getCgp(): Promise<Cgp> {
   return response.data
 }
 
+export async function getCgpHistory(): Promise<Cgp> {
+  const response = await axios.get(`${getServerAddress()}/blockchain/cgp/history`)
+  return response.data
+}
+
 export async function getPublicPkHash(publicAddress: string): Promise<string> {
   const response = await axios.get(`${getServerAddress()}/address/decode?address=${publicAddress}`)
   return response.data.pkHash

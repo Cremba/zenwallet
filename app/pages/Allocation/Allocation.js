@@ -119,7 +119,7 @@ class Allocation extends Component<Props, State> {
 
   get areAllFieldsValid() {
     const { allocationAmount } = this.props.voteStore
-    return !!((allocationAmount > 0) &&
+    return !!((allocationAmount >= 0) &&
       (allocationAmount <= 100))
   }
 
@@ -211,7 +211,7 @@ class Allocation extends Component<Props, State> {
   render() {
     const {
       cgpStore: {
-        totalAllocationAmountVoted, resultAllocation, error,
+        totalAllocationAmountVoted, resultAllocation,
       },
       voteStore: {
         outstanding, utilized, pastAllocation, status,
@@ -223,7 +223,7 @@ class Allocation extends Component<Props, State> {
         <Flexbox flexDirection="column" className="allocation-container">
           <Flexbox className="page-title" flexDirection="column">
             <h1>Mining Allocation</h1>
-            <h3>
+            <h3 className="page-title" >
               Vote for your preferred division of fund allocation
               between miners and the Common Goods Pool.
               Users can influence the outcome on a coin-weighted basis by
@@ -237,9 +237,6 @@ class Allocation extends Component<Props, State> {
             </span>
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar" >
-            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
-            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
-            <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
             <BoxLabel
               firstLine="Current Allocation"
               secondLine={(
@@ -249,8 +246,11 @@ class Allocation extends Component<Props, State> {
                   <span className="dot off-white" /> Miner reward:
                   <span className="reward" > {100 - resultAllocation}%</span>
                 </span>)}
-              className="box"
+              className="box magnify"
             />
+            <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" className="magnify" />
+            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
+            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
           </Flexbox>
           <Flexbox flexDirection="row">
             { this.renderVote() }
@@ -260,9 +260,8 @@ class Allocation extends Component<Props, State> {
               <div className="bar-chart">
                 <ChartLoader
                   chartName="currentVotes"
-                  showTitle={false}
                   externalChartData={this.getData}
-                  externalChartLoading={error === 'No Data' || status === 'success'}
+                  externalChartLoading={status === 'success'}
                   current={[{
                     amount: this.state.value,
                     count: pastAllocation === this.state.value ? outstanding : zenCount,

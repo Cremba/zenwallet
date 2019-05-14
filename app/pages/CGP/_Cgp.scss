@@ -14,13 +14,17 @@
 .vote-box {
   background: $light-grey-2;
   padding: 24px;
-  border-left: 2px solid $blue;
+  border-left: 2px solid ;
   margin-right: 20px;
   width: 100%;
+}
 
-  .button-row {
-    margin-top: 20px;
-  }
+.button-row {
+  margin-top: 20px;
+}
+
+.magnify {
+  background: $light-grey;
 }
 
 .payout-result {
@@ -42,7 +46,7 @@ h3.vote-title {
 }
 
 h3.page-title {
-  max-width: 900px;
+  width: 960px;
 }
 
 .proposal { margin: 24px; }

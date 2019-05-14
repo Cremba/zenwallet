@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 import classNames from 'classnames'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
+import { isEmpty } from 'lodash'
 
 
 import { kalapasToZen } from '../../utils/zenUtils'
@@ -67,12 +68,16 @@ class ChartLoader extends Component<Props, State> {
     if (this.chartLoading) {
       return (
         <span>
-          <FontAwesomeIcon icon={['fas', 'spinner']} />
+          <FontAwesomeIcon icon={['fas', 'spinner']} spin />
           { ' ' } loading
         </span>)
     }
-    if (this.chartItems.length === 0) {
-      return null
+    if (isEmpty(this.chartItems)) {
+      return (
+        <span>
+          <FontAwesomeIcon icon={['fas', 'exclamation']} />
+          { ' ' } No votes in the interval yet
+        </span>)
     }
 
     let componentType = null
@@ -85,7 +90,7 @@ class ChartLoader extends Component<Props, State> {
 
 
     return (
-      <div className={classNames('Chart')} >
+      <div className={classNames('Chart')}>
         {React.createElement(componentType, {
           data: Mappers[chartName](this.chartItems),
           current: Mappers[chartName](this.optionalItem),

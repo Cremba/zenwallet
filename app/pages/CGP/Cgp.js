@@ -23,6 +23,7 @@ import { ZENP_MAX_DECIMALS, ZENP_MIN_DECIMALS } from '../../constants'
 import ProtectedButton from '../../components/Buttons'
 import { kalapasToZen } from '../../utils/zenUtils'
 import ReactTablePagination from '../../components/ReactTablePagination'
+import Loading from '../../components/Loading'
 
 
 const intervalLength = 100
@@ -178,7 +179,7 @@ class CGP extends Component<Props> {
   renderVote() {
     const {
       voteStore: { payoutAmount, payoutAddress, inprogress },
-      cgpStore: { fund },
+      cgpStore: { totalFund },
     } = this.props
     return (
       <Flexbox>
@@ -220,7 +221,7 @@ class CGP extends Component<Props> {
               amountDisplay={payoutAmount}
               maxDecimal={ZENP_MAX_DECIMALS}
               minDecimal={ZENP_MIN_DECIMALS}
-              maxAmount={fund ? kalapasToZen(fund) : 0}
+              maxAmount={totalFund}
               shouldShowMaxAmount
               exceedingErrorMessage="Insufficient tokens in the CGP fund"
               onAmountDisplayChanged={this.updateAmountDisplay}
@@ -280,10 +281,14 @@ class CGP extends Component<Props> {
       </Flexbox>)
   }
 
+  getTotalFund() {
+
+  }
+
   render() {
     const {
       cgpStore: {
-        fund, totalPayoutAmountVoted, payoutVote, error,
+        fund, totalFund, totalPayoutAmountVoted, payoutVote, error,
       },
       voteStore: {
         status,
@@ -295,7 +300,7 @@ class CGP extends Component<Props> {
           <Flexbox justifyContent="space-between" flexDirection="column">
             <Flexbox flexDirection="column" className="page-title">
               <h1>Common Goods Pool</h1>
-              <h3 >
+              <h3 className="page-title" >
                 Every 10,000 blocks (100 blocks for the testnet)
                 funds are distributed from the CGP to the winning proposal.
                 Users can influence the outcome on a coin-weighted basis by voting on their
@@ -311,10 +316,10 @@ class CGP extends Component<Props> {
             </Flexbox>
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar">
-            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
+            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP/ ${totalFund} ZP`} secondLine="Currently in the CGP" className="magnify" />
+            <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" className="magnify" />
             <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
-            <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" />
-            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP`} secondLine="Funds in the CGP" />
+            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
           </Flexbox>
           <Flexbox flexDirection="row" >
             <Flexbox flexDirection="column" flexGrow={1} >
@@ -335,8 +340,9 @@ class CGP extends Component<Props> {
                     sortable={false}
                     PaginationComponent={ReactTablePagination}
                     data={error === 'No Data' ? [] : payoutVote}
-                    showPagination={payoutVote.length > 6}
+                    showPagination={payoutVote.length >= 6}
                     columns={this.columns}
+                    LoadingComponent={status === 'success' ? Loading : React.Fragment.defaultProps}
                     loading={status === 'success'}
                     previousText={<FontAwesomeIcon icon={['fas', 'angle-double-left']} />}
                     nextText={<FontAwesomeIcon icon={['fas', 'angle-double-right']} />}
