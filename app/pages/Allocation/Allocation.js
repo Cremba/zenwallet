@@ -97,9 +97,13 @@ class Allocation extends Component<Props, State> {
     if (this.props.voteStore.statusAllocation !== 'success') {
       return null
     }
+    const amountVoted = this.state.value
     return (
       <FormResponseMessage className="success">
-        <span>Successfully voted, the vote will appear after a mined block.</span>
+        <span>
+          Successfully voted for { amountVoted }%
+          to the CGP, the vote will appear after a mined block.
+        </span>
       </FormResponseMessage>
     )
   }

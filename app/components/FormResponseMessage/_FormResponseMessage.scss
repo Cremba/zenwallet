@@ -1,6 +1,7 @@
 @import "styles/Variables";
 
 .form-response-message {
+  position: relative;
   padding: 20px;
   border-radius: 2px;
   border: 1px solid $input-border-color;

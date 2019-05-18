@@ -40,6 +40,8 @@ type Props = {
 class CGP extends Component<Props> {
   state = {
     selected: '',
+    address: '',
+    amount: 0,
   }
   componentDidMount() {
     this.props.cgpStore.initPolling()
@@ -135,7 +137,12 @@ class CGP extends Component<Props> {
     }
     return (
       <FormResponseMessage className="success">
-        <span>Successfully voted, the vote will appear after a mined block.</span>
+        <span>
+          Successfully voted for the proposal <br /> to address: { ' ' }
+          { this.state.address}, for {this.state.amount} ZP, { ' ' }
+          <span className="devider" />
+          <p>the vote will appear after a mined block.</p>
+        </span>
       </FormResponseMessage>
     )
   }
@@ -168,6 +175,10 @@ class CGP extends Component<Props> {
   }
 
   onSubmitButtonClicked = async (confirmedPassword: string) => {
+    this.setState({
+      address: this.props.voteStore.payoutAddress,
+      amount: this.props.voteStore.payoutAmount,
+    })
     this.props.voteStore.createPayoutVote(confirmedPassword)
   }
   onPasteClicked = (clipboardContents: string) => {
