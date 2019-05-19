@@ -84,7 +84,7 @@ nav.sidebar {
     span {
       display: block;
       padding: 15px;
-      color: rgba(255,255,255,.5);
+      color: rgba(255,255,255,0.5);
       text-transform: uppercase;
       border-bottom: 1px solid $bg-color-d;
     }
@@ -94,7 +94,7 @@ nav.sidebar {
       text-transform: uppercase;
       display: block;
       padding: 6px 10px 6px 24px;
-      color: #e6e6e6;
+      color: $pinkish-grey;
       text-decoration: none;
       line-height: 1.5rem;
       font-weight: 400;
@@ -113,7 +113,7 @@ nav.sidebar {
 
     }
 
-    a:hover { color: $light-white; }
+    a:hover { color: #fff; }
     a:focus {
       background: $light-grey;
       width: 197px;
