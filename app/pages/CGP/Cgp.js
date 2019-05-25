@@ -24,6 +24,7 @@ import ProtectedButton from '../../components/Buttons'
 import { kalapasToZen } from '../../utils/zenUtils'
 import ReactTablePagination from '../../components/ReactTablePagination'
 import Loading from '../../components/Loading'
+import CopyableTableCell from '../../components/CopyableTableCell'
 
 
 const intervalLength = 100
@@ -183,8 +184,6 @@ class CGP extends Component<Props> {
   }
   onPasteClicked = (clipboardContents: string) => {
     this.props.voteStore.payoutAddress = clipboardContents
-    // $FlowFixMe
-    this.elTo.focus()
   }
 
   renderVote() {
@@ -281,11 +280,15 @@ class CGP extends Component<Props> {
                 </tr>
                 <tr className="separator" />
               </thead>
-              { resultPayout &&
-              <tbody>
-                <td>{resultPayout.recipient ? truncateString(resultPayout.recipient) : ''}</td>
-                <td>{resultPayout.amount ? kalapasToZen(resultPayout.amount) : 0} ZP</td>
-              </tbody>}
+              { resultPayout ?
+                <tbody>
+                  <tr>
+                    <CopyableTableCell string={resultPayout.recipient} />
+                    <td>{resultPayout.amount ? kalapasToZen(resultPayout.amount) : 0} ZP</td>
+                  </tr>
+                </tbody>
+              :
+                <tbody />}
             </table>
           </Flexbox>
         </Flexbox>
@@ -305,6 +308,7 @@ class CGP extends Component<Props> {
         statusPayout,
       },
     } = this.props
+    const hasVoted = statusPayout === 'success'
     return (
       <Layout className="GCP">
         <Flexbox flexDirection="column" className="CGP-container">
@@ -346,17 +350,15 @@ class CGP extends Component<Props> {
                   <ReactTable
                     manual
                     className="align-left-headers"
-                    minRows={6}
+                    minRows={7}
                     resizable={false}
                     sortable={false}
                     PaginationComponent={ReactTablePagination}
                     data={error === 'No Data' ? [] : payoutVote}
-                    showPagination={payoutVote.length >= 6}
+                    showPagination={false}
                     columns={this.columns}
-                    LoadingComponent={statusPayout === 'success' ? Loading : React.Fragment.defaultProps}
-                    loading={statusPayout === 'success'}
-                    previousText={<FontAwesomeIcon icon={['fas', 'angle-double-left']} />}
-                    nextText={<FontAwesomeIcon icon={['fas', 'angle-double-right']} />}
+                    LoadingComponent={hasVoted ? Loading : React.Fragment.defaultProps}
+                    loading={hasVoted}
                     getTrProps={(state, rowInfo) => {
                       if (rowInfo && rowInfo.row) {
                         return {

@@ -10,13 +10,14 @@ class CgpStore {
   @observable intervalLength = 100 // TODO: edit 100 for final release
   @observable allocationVote = []
   @observable resultAllocation = ''
-  @observable totalPayoutVoted = 0
+  @observable totalPayoutAmountVoted = 0
   @observable totalAllocationAmountVoted = 0
   @observable payoutVote = [Object]
   @observable resultPayout = ''
   @observable error = ''
   @observable totalFund = 0
   @observable genesisTimestamp = 0
+  currentInterval = 0
   fetchPollManager = new PollManager({
     name: 'Cgp fetch',
     fnToPoll: this.fetch,
@@ -36,30 +37,38 @@ class CgpStore {
     this.fetchPollManager.stopPolling()
   }
 
+  get getFund() {
+    return kalapasToZen(+this.fund) +
+      ((((this.currentInterval + 1) * (this.intervalLength)) - this.networkStore.headers)
+      * ((this.resultAllocation / 100) * 50))
+  }
+
   @action.bound
   async fetch() {
     try {
       const cgp = await getCgp()
       const { tallies } = cgp
-      const currentInterval =
-        Math.floor(this.networkStore.headers / this.intervalLength)
       runInAction(() => {
-        // this.pastFund =
-        //   cgpHistory.map(data => data.fund).reduce((total, pastFund) => +total + pastFund)
+        this.currentInterval = Math.floor(this.networkStore.headers / this.intervalLength)
         this.resultAllocation = cgp.resultAllocation
-        this.resultPayout = cgp.resultPayout
+        this.resultPayout = isEmpty(cgp.resultPayout) ? undefined : cgp.resultPayout
         this.fund = cgp.fund
-        this.totalFund = kalapasToZen(+this.fund) +
-          ((((currentInterval + 1) * (this.intervalLength)) - this.networkStore.headers)
-            * ((this.resultAllocation / 100) * 50))
-        console.log(this.totalFund)
-        if (isEmpty(tallies)) this.error = 'No Data'
-        else {
-          const currentTally = tallies.filter(data => data.interval === currentInterval)[0]
+        this.totalFund = this.getFund
+        if (isEmpty(tallies)) {
+          this.allocationVote = []
+          this.payoutVote = []
+          this.totalAllocationAmountVoted = 0
+          this.totalPayoutAmountVoted = 0
+          this.error = 'No Data'
+        } else {
+          const currentTally = tallies.filter(data => data.interval === this.currentInterval)[0]
           this.interval = currentTally.interval
-          this.allocationVote = currentTally.allocation ? currentTally.allocation.votes : []
-          this.totalAllocationAmountVoted = this.getAmountVoted(this.allocationVote)
-          this.payoutVote = currentTally.payout ? this.setData(currentTally.payout.votes) : []
+          this.allocationVote =
+            !isEmpty(currentTally.allocation) ? currentTally.allocation.votes : []
+          this.totalAllocationAmountVoted =
+            this.getAmountVoted(this.allocationVote)
+          this.payoutVote =
+            !isEmpty(currentTally.payout) ? this.setData(currentTally.payout.votes) : []
           this.totalPayoutAmountVoted =
             this.getAmountVoted(currentTally.payout.votes ? currentTally.payout.votes : [])
           this.error = ''
@@ -83,7 +92,7 @@ class CgpStore {
   }
 
   getAmountVoted(votes: Array) {
-    if (!votes) {
+    if (isEmpty(votes)) {
       return
     }
     return votes

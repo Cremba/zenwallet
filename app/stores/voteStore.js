@@ -1,7 +1,9 @@
-import { observable, action, runInAction } from 'mobx'
+import { observable, action, runInAction, toJS } from 'mobx'
+import { isEmpty, isNumber } from 'lodash'
 
 import { getUtilization, postAllocationVote, postPayoutVote } from '../services/api-service'
 import PollManager from '../utils/PollManager'
+import { kalapasToZen } from '../utils/zenUtils'
 
 
 class VoteStore {
@@ -9,6 +11,8 @@ class VoteStore {
   @observable payoutAddress = ''
   @observable payoutAmount = ''
   @observable pastAllocation = ''
+  @observable pastPayoutAmount = ''
+  @observable pastPayoutAddress = ''
   @observable pastPayout = ''
   @observable outstanding = -1
   @observable utilized = -1
@@ -37,9 +41,20 @@ class VoteStore {
         this.outstanding = response.outstanding
         this.utilized = response.utilized
         if (response.vote) {
-          this.pastAllocation = response.vote.allocation ? response.vote.allocation : null
-          this.pastPayout = response.vote.payout ? response.vote.payout : null
+          this.pastAllocation = isNumber(response.vote.allocation) ? response.vote.allocation : null
+          if (!isEmpty(response.vote.payout)) {
+            // TODO: handle past data
+            this.pastPayout = toJS(response.vote.payout)
+            this.pastPayoutAmount = kalapasToZen(this.pastPayout.amount)
+            this.pastPayoutAddress = this.pastPayout.recipient
+          } else {
+            this.pastPayout = null
+            this.payoutAmount = null
+            this.payoutAddress = null
+          }
         } else {
+          this.payoutAddress = null
+          this.payoutAmount = null
           this.pastAllocation = null
           this.pastPayout = null
         }
@@ -59,9 +74,7 @@ class VoteStore {
         allocation: this.allocationAmount,
         password,
       }
-      console.log(data)
       const response = await postAllocationVote(data)
-      console.log(response)
       runInAction(() => {
         console.log('createAllocationVote response', response)
         this.reset()

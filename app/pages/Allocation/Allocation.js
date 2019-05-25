@@ -140,10 +140,7 @@ class Allocation extends Component<Props, State> {
       const updateVote = mobx.toJS(allocationVote)
       return updateVote
     }
-    return [{
-      amount: 0,
-      count: 1,
-    }]
+    return []
   }
 
   renderVote() {
