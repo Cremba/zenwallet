@@ -23,8 +23,7 @@ const pageTexts = [
     description: 'We care about your safety ­– so please read the following:',
     bullets: [
       'There is no “Import Wallet” option in this wallet - since it is not recommended to use your real seed with the release candidate.',
-      'To receive ZP tokens to try out the release candidate send an email to info@zenprotocol.com with your address and the title “Please send me some ZP RC tokens”',
-      'Click here to learn more about the release candidate',
+      'You are going to receive 50 ZP when you create your new wallet”',
     ],
   },
 ]

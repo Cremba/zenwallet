@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import Flexbox from 'flexbox-react'
 
 import OnBoardingLayout from '../Layout/Layout'
-import { CREATE_WALLET_SRC, IMPORT_WALLET_SRC } from '../../constants/imgSources'
+import { CREATE_WALLET_SRC } from '../../constants/imgSources'
 import routes from '../../constants/routes'
 
 class ImportOrCreateWallet extends Component {
@@ -26,14 +26,6 @@ class ImportOrCreateWallet extends Component {
             <h5>Create New Wallet</h5>
             <p>Creating a new wallet will generate a 24 word mnemonic passphrase (seed) which you will need to store in a secure place. We recommend 2 pieces of paper.</p>
             <Link className="button" to={routes.SECRET_PHRASE}>Create Wallet</Link>
-          </Flexbox>
-
-          <Flexbox className="box import-wallet" flexDirection="column">
-            <img src={IMPORT_WALLET_SRC} alt="Import wallet" />
-            <h5>Import Existing Wallet</h5>
-            <p>If you already have a secret phrase (seed) you can simply import it and get access to all of your assets.</p>
-            <Link className="button secondary" to={routes.IMPORT_WALLET}>Import Wallet</Link>
-
           </Flexbox>
 
         </Flexbox>

@@ -15,7 +15,7 @@ class BlockchainLogsStore {
 
     setInterval(() => {
       runInAction(() => {
-        this.logs = this.logs.concat(this.pending)
+        this.logs = this.logs.concat(this.pending).slice(-100)
         this.pending = []
       })
     }, 2000)

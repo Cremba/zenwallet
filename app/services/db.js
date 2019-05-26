@@ -8,7 +8,7 @@ import FileSync from 'lowdb/adapters/FileSync'
 import exampleContractCode from './exampleContractCode'
 
 const electronApp = (electron.app || electron.remote.app)
-const fileName = 'zen-wallet-db.json'
+const fileName = 'zen-wallet-yesod-db.json'
 
 const appDataPath = electronApp.getPath('appData')
 const userDataPath = path.join(appDataPath, 'zenwallet')
