@@ -10,7 +10,7 @@ export const token = 'df7048b99dfc5cb58f6a99939aa40ef2fac9d7c8af43be487fa479bb63
 export const attributes = {
   NODE_ENV: process.env.NODE_ENV,
   walletVersion: pjson.version,
-  zenNodeVersion: pjson.dependencies['@zen/zen-node'],
+  zenNodeVersion: pjson.dependencies['@zen/zen-node-yesod'],
   // override for annonimity
   referer: '',
   hostname: '',

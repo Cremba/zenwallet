@@ -7,6 +7,7 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 import cx from 'classnames'
 import moment from 'moment'
 import ReactTable from 'react-table'
+import { isEmpty, isNumber } from 'lodash'
 
 import PasteButton from '../../components/PasteButton'
 import { ref } from '../../utils/domUtils'
@@ -16,7 +17,7 @@ import NetworkStore from '../../stores/networkStore'
 import VoteStore from '../../stores/voteStore'
 import BoxLabel from '../../components/BoxLabel/BoxLabel'
 import IsValidIcon from '../../components/IsValidIcon'
-import { isValidAddress, truncateString } from '../../utils/helpers'
+import { isValidAddress } from '../../utils/helpers'
 import FormResponseMessage from '../../components/FormResponseMessage'
 import AmountInput from '../../components/AmountInput'
 import { ZENP_MAX_DECIMALS, ZENP_MIN_DECIMALS } from '../../constants'
@@ -25,10 +26,6 @@ import { kalapasToZen } from '../../utils/zenUtils'
 import ReactTablePagination from '../../components/ReactTablePagination'
 import Loading from '../../components/Loading'
 import CopyableTableCell from '../../components/CopyableTableCell'
-
-
-const intervalLength = 100
-
 
 type Props = {
   cgpStore: CgpStore,
@@ -41,8 +38,6 @@ type Props = {
 class CGP extends Component<Props> {
   state = {
     selected: '',
-    address: '',
-    amount: 0,
   }
   componentDidMount() {
     this.props.cgpStore.initPolling()
@@ -50,12 +45,14 @@ class CGP extends Component<Props> {
     this.props.voteStore.initPolling()
   }
 
-  getNextDistribution = (headers) => Math.ceil((headers / intervalLength))
+  getNextDistribution = (headers) => Math.ceil((headers / this.props.cgpStore.intervalLength))
 
   calcNextDistribution = () => {
-    const { headers } = this.props.networkStore
     const { genesisTimestamp } = this.props.cgpStore
-    const time = genesisTimestamp + (headers * 240000) // 360) * 86400000)
+    const missingBlocks =
+      (((+this.props.cgpStore.currentInterval + 1) * this.props.cgpStore.intervalLength)
+        - this.props.networkStore.headers)
+    const time = genesisTimestamp + (missingBlocks * 240000)
     return moment(new Date(time))
   }
 
@@ -71,7 +68,8 @@ class CGP extends Component<Props> {
 
   calcRemainingBlock = () => {
     const { headers } = this.props.networkStore
-    return (this.getNextDistribution(headers) * intervalLength) - headers
+    const { intervalLength } = this.props.cgpStore
+    return ((this.getNextDistribution(headers) * intervalLength) - headers) + 1
   }
 
   get isToInvalid() {
@@ -101,7 +99,7 @@ class CGP extends Component<Props> {
       {
         Header: 'Proposal Address',
         id: 'recipient',
-        accessor: vote => truncateString(vote.recipient),
+        accessor: vote => <CopyableTableCell string={vote.recipient} isTx isReactTable />,
         headerStyle: { outline: 0 },
       },
       {
@@ -132,17 +130,27 @@ class CGP extends Component<Props> {
     )
   }
 
-  renderSuccessResponse() {
-    if (this.props.voteStore.statusPayout !== 'success') {
+  renderHasVoted() {
+    const { pastPayoutAmount, pastPayoutAddress } = this.props.voteStore
+    if (!isNumber(pastPayoutAmount) && isEmpty(pastPayoutAddress)) {
       return null
     }
+    const { utilized } = this.props.voteStore
     return (
-      <FormResponseMessage className="success">
+      <FormResponseMessage className="success vote-box-message" forceShow>
         <span>
-          Successfully voted for the proposal <br /> to address: { ' ' }
-          { this.state.address}, for {this.state.amount} ZP, { ' ' }
-          <span className="devider" />
-          <p>the vote will appear after a mined block.</p>
+          Currently you voted with a weight of {kalapasToZen(utilized)} ZP
+          for an amount of {pastPayoutAmount} ZP to address: { ' ' }
+          <span>
+            <CopyableTableCell string={pastPayoutAddress} hideIcon normalText isSpan />.
+          </span>
+          {((this.props.cgpStore.txHistoryStore.lastBlockVoted === 'payout' || this.props.cgpStore.txHistoryStore.lastBlockVoted === 'both') && isNumber(pastPayoutAmount)) ? ' The vote will appear after a mined block.' : ''}
+        </span>
+        <span className="devider" />
+        <span>
+          Your vote weight will change only if you spend. In case your
+          balance increased before the tally block, you can always revote
+          in order to have a bigger influence.
         </span>
       </FormResponseMessage>
     )
@@ -176,14 +184,27 @@ class CGP extends Component<Props> {
   }
 
   onSubmitButtonClicked = async (confirmedPassword: string) => {
-    this.setState({
-      address: this.props.voteStore.payoutAddress,
-      amount: this.props.voteStore.payoutAmount,
-    })
     this.props.voteStore.createPayoutVote(confirmedPassword)
   }
   onPasteClicked = (clipboardContents: string) => {
     this.props.voteStore.payoutAddress = clipboardContents
+  }
+
+  renderLoading() {
+    const hasVoted =
+      (this.props.cgpStore.txHistoryStore.lastBlockVoted === 'payout' || this.props.cgpStore.txHistoryStore.lastBlockVoted === 'both')
+      && isNumber(this.props.voteStore.pastPayoutAmount)
+    return (
+      <Flexbox>
+        <Loading
+          className="loading-in"
+          loadingText={hasVoted ?
+            ' Loading your vote...'
+            :
+            ' Loading...'}
+        />
+      </Flexbox>
+    )
   }
 
   renderVote() {
@@ -192,7 +213,7 @@ class CGP extends Component<Props> {
       cgpStore: { totalFund },
     } = this.props
     return (
-      <Flexbox>
+      <Flexbox flexDirection="column" className="vote" >
         <Flexbox className="vote-box" flexDirection="column" >
           <h3 className="vote-title">How would you like to vote for next distribution?</h3>
           <Flexbox flexDirection="column" className="destination-address-input form-row">
@@ -253,6 +274,8 @@ class CGP extends Component<Props> {
           </Flexbox>
 
         </Flexbox>
+        { this.renderHasVoted() }
+        { this.renderErrorResponse() }
       </Flexbox>
     )
   }
@@ -265,50 +288,29 @@ class CGP extends Component<Props> {
     setTimeout(() => { this.setState({ selected: '' }) }, 2000)
   }
 
-  renderResult() {
-    const { resultPayout } = this.props.cgpStore
-    return (
-      <Flexbox className="payout-result" flexGrow={1} flexDirection="column" >
-        <Flexbox className="result" flexDirection="column" >
-          <h3 className="vote-title">Previous Distribution</h3>
-          <Flexbox flexDirection="row" flexGrow={1} >
-            <table>
-              <thead>
-                <tr>
-                  <th className="align-left">Proposal Address</th>
-                  <th className="align-left">Requested Amount</th>
-                </tr>
-                <tr className="separator" />
-              </thead>
-              { resultPayout ?
-                <tbody>
-                  <tr>
-                    <CopyableTableCell string={resultPayout.recipient} />
-                    <td>{resultPayout.amount ? kalapasToZen(resultPayout.amount) : 0} ZP</td>
-                  </tr>
-                </tbody>
-              :
-                <tbody />}
-            </table>
-          </Flexbox>
-        </Flexbox>
-      </Flexbox>)
+  getTallyBlock() {
+    const { currentInterval, intervalLength } = this.props.cgpStore
+    return ((+currentInterval + 1) * +intervalLength) + 1
   }
 
-  getTotalFund() {
-
+  calculateRows(payoutVote) {
+    if (payoutVote.length < 7) {
+      return payoutVote.length === 0 ? 1 : payoutVote.length
+    }
+    return 7
   }
 
   render() {
     const {
       cgpStore: {
-        fund, totalFund, totalPayoutAmountVoted, payoutVote, error,
+        fund, totalFund, totalPayoutAmountVoted, payoutVote, error, resultPayout, txHistoryStore,
       },
       voteStore: {
-        statusPayout,
+        pastPayoutAmount,
       },
     } = this.props
-    const hasVoted = statusPayout === 'success'
+    const { lastBlockVoted } = txHistoryStore
+    const hasVoted: boolean = ((lastBlockVoted === 'payout' || lastBlockVoted === 'both') && isNumber(pastPayoutAmount))
     return (
       <Layout className="GCP">
         <Flexbox flexDirection="column" className="CGP-container">
@@ -327,38 +329,60 @@ class CGP extends Component<Props> {
               <hr className="line-break" />
               <span className="page-subtitle">
                 Next estimated distribution: {this.calcNextDistribution().format('MMMM DD, YYYY')}
+                { ' ' } | Time remaining until end of voting period: {this.calcTimeRemaining()}
               </span>
             </Flexbox>
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar">
-            <BoxLabel firstLine={`${fund ? kalapasToZen(fund) : 0} ZP/ ${totalFund} ZP`} secondLine="Currently in the CGP" className="magnify" />
-            <BoxLabel firstLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" className="magnify" />
-            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
-            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
+            <BoxLabel firstLine="Tally Block/ Remaining blocks" secondLine={`${this.getTallyBlock()} / ${this.calcRemainingBlock()}`} className="magnify" />
+            <BoxLabel firstLine="CGP Balance (Currently / End of interval)" secondLine={`${fund ? kalapasToZen(fund) : 0} / ${totalFund} ZP`} className="magnify" />
+            <BoxLabel firstLine="ZP have participated in the vote" secondLine={`${totalPayoutAmountVoted ? kalapasToZen(totalPayoutAmountVoted) : 0} ZP`} className="magnify" />
+            <BoxLabel
+              firstLine="Previous Winner"
+              secondLine={(
+                resultPayout ?
+                  <span>
+                    <CopyableTableCell string={resultPayout.recipient} hideIcon isSpan />
+                    { ' ' }/ {kalapasToZen(resultPayout.amount)} ZP
+                  </span>
+              :
+                  <span>
+                   No winner in last payout
+                  </span>)}
+              className="magnify"
+            />
           </Flexbox>
-          <Flexbox flexDirection="row" >
-            <Flexbox flexDirection="column" flexGrow={1} >
+          <Flexbox flexDirection="row">
+            <Flexbox flexDirection="column" width="100%" >
               { this.renderVote() }
-              { this.renderResult() }
-              { this.renderSuccessResponse() }
-              { this.renderErrorResponse() }
             </Flexbox>
-            <Flexbox className="active-proposal" flexGrow={1} flexDirection="column" >
+            <Flexbox className="active-proposal" flexDirection="column" >
               <Flexbox className="proposal" flexDirection="column" >
-                <h3 className="vote-title">Current Distribution Votes</h3>
-                <Flexbox flexDirection="row" flexGrow={1} >
+                <Flexbox flexDirection="row" justifyContent="space-between" className="word-labels">
+
+                  <Flexbox flexDirection="row">
+                    <label className="vote-title">Current Distribution Votes</label>
+                  </Flexbox>
+                  {((this.props.cgpStore.txHistoryStore.lastBlockVoted === 'payout' || this.props.cgpStore.txHistoryStore.lastBlockVoted === 'both')
+                    && isNumber(this.props.voteStore.pastPayoutAmount)) &&
+                    <Flexbox flexDirection="row" justifyContent="flex-end">
+                      <label className="vote-title" >{this.renderLoading()}</label>
+                    </Flexbox>}
+                </Flexbox>
+                <Flexbox flexDirection="row">
                   <ReactTable
                     manual
                     className="align-left-headers"
-                    minRows={7}
+                    minRows={this.calculateRows(payoutVote)}
                     resizable={false}
                     sortable={false}
                     PaginationComponent={ReactTablePagination}
                     data={error === 'No Data' ? [] : payoutVote}
                     showPagination={false}
+                    sortedData
                     columns={this.columns}
-                    LoadingComponent={hasVoted ? Loading : React.Fragment.defaultProps}
-                    loading={hasVoted}
+                    noDataText="No votes in this interval yet"
+                    NoDataComponent={hasVoted ? Loading : React.Fragment.defaultProps}
                     getTrProps={(state, rowInfo) => {
                       if (rowInfo && rowInfo.row) {
                         return {

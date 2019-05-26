@@ -1,12 +1,10 @@
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 import classNames from 'classnames'
-import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 import { isEmpty } from 'lodash'
 
 
 import { kalapasToZen } from '../../utils/zenUtils'
-import Loading from '../Loading'
 
 import BarChart from './BarChart'
 
@@ -57,7 +55,7 @@ class ChartLoader extends Component<Props, State> {
   }
 
   get optionalItem() {
-    return this.props.current || []
+    return this.props.current
   }
 
   render() {
@@ -66,18 +64,10 @@ class ChartLoader extends Component<Props, State> {
     if (!chartConfig) {
       return null
     }
-    if (this.chartLoading) {
-      return (
-        <span>
-          <Loading className="loading-in" />
-        </span>
-      )
-    }
     if (isEmpty(this.chartItems)) {
       return (
         <span>
-          <FontAwesomeIcon icon={['fas', 'exclamation']} />
-          { ' ' } No votes in the interval yet
+          { ' ' } No votes in this interval yet
         </span>)
     }
 

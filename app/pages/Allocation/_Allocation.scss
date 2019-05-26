@@ -5,11 +5,11 @@
 	.rc-slider-rail {
 		height: 15px;
 		border-radius: 0;
-		background-color: #bfbfbf;
+		background-color: #2f8be6;
 	}
 	.rc-slider-track {
 		height: 15px;
-		background-color: #2f8be6;
+		background-color: #bfbfbf;
 		border-radius: 0;
 	}
 
@@ -89,17 +89,30 @@
 .potential-outcome {
   background: $darker-gray;
   margin-left: 25px;
-  width: 35%;
-	padding: 5px 20px;
-  .bar-chart { padding: 10px; }
+  padding: 5px 20px;
+
+  .bar-chart { padding: 15px; }
+
+  background: $darker-gray;
+  width: 100%;
+}
+
+.chart-loader {
+  margin-top: 100px;
+}
+
+.vote-message {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.votes {
+  margin-right: 25px;
 }
 
 .loading-in {
-  margin-top: -30px;
   display: block;
   position: relative;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
 }
 
 .dot {
@@ -111,7 +124,10 @@
 
 .off-white { background-color: $off-white; }
 
-.blue { background-color: $cgp-blue; }
+.blue {
+  background-color: $cgp-blue;
+  margin-left: 15px;
+}
 
 hr {
   width: 100%;
@@ -119,8 +135,11 @@ hr {
   margin-top: 5px;
   margin-bottom: 7px;
 }
+
 h3.page-title {
-  width: 960px;
+  width: 80%;
+  min-width: 600px;
+  max-width: 960px;
 }
 
 td {
@@ -129,9 +148,30 @@ td {
 
 .box-current {
   background: $darker-gray;
-  width: 24%;
-  margin-right: 0;
-  height: 90px;
+  padding: 17px;
+  height: 40px;
+  width: 20%;
+  margin: 20px 10px;
+
+  .first-input {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: $light-white;
+  }
+
+  .second-input {
+    font-weight: bold;
+    font-size: 14px;
+    color: $light-white;
+  }
+
+  div {
+    justify-content: space-between;
+  }
+}
+
+.magnify {
+  background: $off-white;
 }
 
 .box-row {
@@ -140,7 +180,7 @@ td {
 
 .reward {
   color: $pinkish-grey;
-  padding: 10px;
+  padding: 2px;
 }
 
 .test {

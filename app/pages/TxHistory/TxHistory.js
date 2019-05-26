@@ -70,6 +70,12 @@ class TxHistory extends Component<Props> {
         headerStyle: { outline: 0 },
       },
       {
+        Header: 'Type',
+        id: 'lockType',
+        accessor: tx => Object.keys(tx.lock)[0],
+        headerStyle: { outline: 0 },
+      },
+      {
         Header: () => <div className="align-right">Amount</div>,
         id: 'amount',
         accessor: tx => (

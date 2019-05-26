@@ -11,7 +11,10 @@ const { clipboard } = require('electron')
 
 type Props = {
   string: string,
-  isReactTable?: boolean
+  isReactTable?: boolean,
+  hideIcon?: boolean,
+  normalText?: boolean,
+  isSpan?: boolean
 };
 
 type State = {
@@ -36,6 +39,7 @@ class CopyableTableCell extends React.Component<Props, State> {
 
   get formattedString() {
     const { string } = this.props
+    if (this.props.normalText) return string
     return !isZenAsset(string) ? truncateString(string) : string
   }
   renderString() {
@@ -47,7 +51,12 @@ class CopyableTableCell extends React.Component<Props, State> {
     const { copyText } = this.state
     return (
       <React.Fragment>
-        <span title={string}>
+        <span
+          title={string}
+          onClick={() => { this.copyToClipboard(string) }}
+          data-balloon={copyText}
+          data-balloon-pos="up"
+        >
           { this.renderString() }{' '}
         </span>
         <span
@@ -55,17 +64,17 @@ class CopyableTableCell extends React.Component<Props, State> {
           data-balloon={copyText}
           data-balloon-pos="up"
         >
-          <FontAwesomeIcon icon={['far', 'copy']} className="" />
+          {!this.props.hideIcon && <FontAwesomeIcon icon={['far', 'copy']} />}
         </span>
       </React.Fragment>
     )
   }
 
   render() {
-    const { string, isReactTable } = this.props
-    return isReactTable
-      ? <div className="align-left copyable" title={string}>{this.renderInner}</div>
-      : <td className="align-left copyable" title={string}>{this.renderInner}</td>
+    const { string, isReactTable, isSpan } = this.props
+    if (isSpan) return <span className="align-left copyable" title={string}>{this.renderInner}</span>
+    if (isReactTable) return <div className="align-left copyable" title={string}>{this.renderInner}</div>
+    return <td className="align-left copyable" title={string}>{this.renderInner}</td>
   }
 }
 

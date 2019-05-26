@@ -2,6 +2,8 @@
 import React from 'react'
 import { observable, action, runInAction } from 'mobx'
 import { toast } from 'react-toastify'
+import { isNumber, isEmpty } from 'lodash'
+
 
 import routes from '../constants/routes'
 import ToastLink from '../components/ToastLink'
@@ -19,6 +21,7 @@ class TxHistoryStore {
   @observable pageSize = 20
   @observable isFetchingCount = false
   @observable isFetchingTransactions = false
+  @observable lastBlockVoted = ''
   fetchPollManager = new PollManager({
     name: 'tx history count fetch',
     fnToPoll: this.fetchCount,
@@ -43,6 +46,53 @@ class TxHistoryStore {
     this.isFetchingCount = false // goldy note to self: this used to be wrapped in runInAction
   }
 
+  @action
+  getPastVote() {
+    const lastVote = this.transactions
+      .filter((transaction) => {
+        const { confirmations, amount, lock: { Vote } } = transaction
+        return confirmations !== 0 && amount === 0 && Vote
+      })[0]
+    if (!lastVote) return { allocation: this.pastAllocation, payout: this.pastPayout }
+    const { lock: { Vote: { voteData: { allocation, payout: { amount, recipient } } } } } = lastVote
+    db.set(this.dbPayout, { amount, recipient }).write()
+    db.set(this.dbAllocation, allocation).write()
+    return { allocation, payout: { amount, recipient } }
+  }
+
+  @action
+  getLastVoteData() {
+    const {
+      allocation: pastAllocation, payout: { amount: pastAmount, recipient: pastRecipient },
+    } = this.getPastVote()
+    const lastMempoolVote = this.transactions
+      .filter((transaction) => {
+        const { confirmations, amount, lock: { Vote } } = transaction
+        return confirmations === 0 && amount === 0 && Vote
+      })[0]
+    if (!lastMempoolVote) return ''
+    const { lock: { Vote: { voteData } } } = lastMempoolVote
+    if (!pastAmount && !pastRecipient && isEmpty(pastAllocation)) {
+      const { allocation, payout } = voteData
+      if (isNumber(allocation) && payout.amount && payout.recipient) return 'both'
+      if (isNumber(allocation)) return 'allocation'
+      if (payout) return 'payout'
+    } else {
+      const { allocation, payout: { amount, recipient } } = voteData
+      if (!amount && !recipient) return 'allocation'
+      const isAllocation = pastAllocation !== allocation
+      const isPayout = (pastAmount !== amount || pastRecipient !== recipient)
+      if (isAllocation && isPayout) return 'both'
+      if (isAllocation) {
+        return 'allocation'
+      }
+      if (isPayout) {
+        return 'payout'
+      }
+    }
+    return ''
+  }
+
   @action.bound
   selectPageSize(nextPageSize: number) {
     this.pageIdx = Math.floor((this.pageSize * this.pageIdx) / nextPageSize)
@@ -55,8 +105,7 @@ class TxHistoryStore {
     this.pageIdx = nextPageIdx
     this.fetch()
   }
-
-  @action.bound
+   @action.bound
   async fetch() {
     // cuurently not used, left here to support loading indicator for the UI
     this.isFetchingTransactions = true
@@ -64,6 +113,7 @@ class TxHistoryStore {
       const nextTransactions = await getTxHistory({ skip: this.skip, take: this.pageSize })
       runInAction(() => {
         this.transactions = nextTransactions
+        this.lastBlockVoted = this.getLastVoteData()
         this.isFetchingTransactions = false
       })
     } catch (error) {
@@ -73,34 +123,34 @@ class TxHistoryStore {
   }
 
   @action.bound
-  async fetchCount() {
-    if (this.isFetchingCount) { return }
-    this.isFetchingCount = true
-    try {
-      const nextCount = await getTxHistoryCount()
-      runInAction(() => {
-        this.isFetchingCount = false
-        if (nextCount === this.count) {
-          this.isFirstFetchCountSinceLastLogin = false
-          return
-        }
-        this.count = nextCount
-        if (nextCount > this.txDbCountInLastLogin) {
-          this.toastNewTx(nextCount)
-          db.set(this.txDbCountInLastLoginKey, nextCount).write()
-        }
-        // think about db and store data
-        if (nextCount > this.txDbCountInLastUserVisitToTransactionsRoute) {
-          this.newTxsCountSinceUserVisitedTransactionsPage =
+   async fetchCount() {
+     if (this.isFetchingCount) { return }
+     this.isFetchingCount = true
+     try {
+       const nextCount = await getTxHistoryCount()
+       runInAction(() => {
+         this.isFetchingCount = false
+         if (nextCount === this.count) {
+           this.isFirstFetchCountSinceLastLogin = false
+           return
+         }
+         this.count = nextCount
+         if (nextCount > this.txDbCountInLastLogin) {
+           this.toastNewTx(nextCount)
+           db.set(this.txDbCountInLastLoginKey, nextCount).write()
+         }
+         // think about db and store data
+         if (nextCount > this.txDbCountInLastUserVisitToTransactionsRoute) {
+           this.newTxsCountSinceUserVisitedTransactionsPage =
             nextCount - this.txDbCountInLastUserVisitToTransactionsRoute
-        }
-        this.isFirstFetchCountSinceLastLogin = false
-      })
-    } catch (error) {
-      console.log('error fecthing txHistoryCount', error)
-      this.isFetchingCount = false
-    }
-  }
+         }
+         this.isFirstFetchCountSinceLastLogin = false
+       })
+     } catch (error) {
+       console.log('error fecthing txHistoryCount', error)
+       this.isFetchingCount = false
+     }
+   }
 
   toastNewTx(nextCount) {
     const NewTxsDelta = nextCount - this.txDbCountInLastLogin
@@ -121,6 +171,22 @@ class TxHistoryStore {
 
   get txDbCountInLastLogin() {
     return db.get(this.txDbCountInLastLoginKey).value()
+  }
+
+  get pastAllocation() {
+    return db.get(this.dbAllocation).value()
+  }
+
+  get dbAllocation() {
+    return `allocation-${this.networkStore.chain}`
+  }
+
+  get pastPayout() {
+    return db.get(this.dbPayout).value()
+  }
+
+  get dbPayout() {
+    return `payout-${this.networkStore.chain}`
   }
 
   get txDbCountInLastLoginKey() {

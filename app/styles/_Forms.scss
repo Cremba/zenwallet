@@ -29,7 +29,7 @@ input[type=password],
   background: $dark-grey;
   padding: 10px;
   color: $off-white;
-  border: solid 1px $input-border-color;
+  border: solid 1px $secondary-grey;
   outline: none;
   border-radius: $border-radius;
   font-size: 13px;
@@ -60,7 +60,7 @@ input[type=password],
   padding: 11px;
 	font-size: 12px;
   text-transform: uppercase;
-	border-left: solid 1px $input-border-color;
+	border-left: solid 1px $secondary-grey;
 	color: $blue;
 	background: $dark-grey-2;
 }
@@ -90,7 +90,7 @@ input[type=password],
 
 		height: 100%;
 		background: $dark-grey-2;
-		border-left: 1px solid $input-border-color;
+		border-left: 1px solid $secondary-grey;
 		border-radius: 0 2px 2px 0;
 		svg { color: $blue; }
 		svg.fa-angle-up { padding: 4px 11px 0px 11px; }
@@ -298,7 +298,7 @@ label.checkbox {
 
 .input-group {
 
-	border: solid 1px $input-border-color;
+	border: solid 1px $secondary-grey;
 	background: $dark-grey;
 	border-radius: 2px;
 

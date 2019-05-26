@@ -16,10 +16,9 @@ import ProtectedButton from '../../components/Buttons'
 import ChartLoader from '../../components/Chart'
 import { kalapasToZen } from '../../utils/zenUtils'
 import FormResponseMessage from '../../components/FormResponseMessage'
+import Loading from '../../components/Loading'
 
-const intervalLength = 100
 const marks = {
-  10: '',
   20: '',
   30: '',
   40: '',
@@ -27,6 +26,7 @@ const marks = {
   60: '',
   70: '',
   80: '',
+  90: '',
 }
 
 type State = {
@@ -55,9 +55,11 @@ class Allocation extends Component<Props, State> {
   }
 
   calcNextDistribution = () => {
-    const { headers } = this.props.networkStore
     const { genesisTimestamp } = this.props.cgpStore
-    const time = genesisTimestamp + (headers * 240000) // 360) * 86400000)
+    const missingBlocks =
+      (((+this.props.cgpStore.currentInterval + 1) * this.props.cgpStore.intervalLength)
+        - this.props.networkStore.headers)
+    const time = genesisTimestamp + (missingBlocks * 240000)
     return moment(new Date(time))
   }
 
@@ -72,39 +74,43 @@ class Allocation extends Component<Props, State> {
   }
 
   calcRemainingBlock = () => {
-    const { blocks } = this.props.networkStore
-    return (this.getNextDistribution(blocks) * intervalLength) - blocks
+    const { headers } = this.props.networkStore
+    const { intervalLength } = this.props.cgpStore
+    return ((this.getNextDistribution(headers) * intervalLength) - headers) + 1
   }
 
-  getNextDistribution = (headers) => Math.ceil((headers / intervalLength))
-
-  updateAmountDisplay = (amountDisplay) => {
-    const { voteStore } = this.props
-    voteStore.updateAmountDisplay(amountDisplay)
-  }
+  getNextDistribution = (headers) => Math.ceil((headers / this.props.cgpStore.intervalLength))
 
   onChange = values => {
-    console.log(values)
-    this.setState({ value: values })
-    this.props.voteStore.allocationAmount = +values
+    this.setState({ value: 100 - values })
+    this.props.voteStore.allocationAmount = 100 - +values
   }
 
   onSubmitButtonClicked = async (confirmedPassword: string) => {
     this.props.voteStore.createAllocationVote(confirmedPassword)
   }
 
-  renderSuccessResponse() {
-    if (this.props.voteStore.statusAllocation !== 'success') {
+  renderHasVoted() {
+    const { utilized, pastAllocation } = this.props.voteStore
+    if (!isNumber(pastAllocation)) {
       return null
     }
-    const amountVoted = this.state.value
     return (
-      <FormResponseMessage className="success">
-        <span>
-          Successfully voted for { amountVoted }%
-          to the CGP, the vote will appear after a mined block.
-        </span>
-      </FormResponseMessage>
+      <Flexbox className="vote-message">
+        <FormResponseMessage className="success" forceShow >
+          <span>
+            Currently you voted with a weight of {kalapasToZen(utilized)} ZP for { pastAllocation }%
+            to the CGP. {((this.props.cgpStore.txHistoryStore.lastBlockVoted === 'allocation' || this.props.cgpStore.txHistoryStore.lastBlockVoted === 'both')
+            && isNumber(pastAllocation)) ? 'Loading your vote...' : ''}
+          </span>
+          <span className="devider" />
+          <span>
+            Your vote weight will change only if you spend. In case your
+            balance increased before the tally block, you can always revote
+            in order to have a bigger influence.
+          </span>
+        </FormResponseMessage>
+      </Flexbox>
     )
   }
 
@@ -143,12 +149,64 @@ class Allocation extends Component<Props, State> {
     return []
   }
 
+  renderLoading() {
+    const hasVoted = (this.props.cgpStore.txHistoryStore.lastBlockVoted === 'allocation' || this.props.cgpStore.txHistoryStore.lastBlockVoted === 'both')
+      && isNumber(this.props.voteStore.pastAllocation)
+    return (
+      <Flexbox>
+        <Loading
+          className="loading-in"
+          loadingText={hasVoted ?
+              ' Loading your vote...'
+          :
+              ' Loading...'}
+        />
+      </Flexbox>
+    )
+  }
+
+  voteText = () => (isNumber(this.props.voteStore.pastAllocation) ? 'Revote' : 'Vote')
+
+  renderPotentialOutcome() {
+    const {
+      voteStore: {
+        outstanding, utilized, pastAllocation,
+      },
+    } = this.props
+    console.log(this.props.cgpStore.txHistoryStore.lastBlockVoted)
+    const zenCount = Number(utilized) + Number(outstanding)
+    return (
+      <Flexbox className="potential-outcome" flexDirection="column" flexGrow={1}>
+        <Flexbox flexDirection="row" justifyContent="space-between" className="word-labels">
+          <Flexbox flexDirection="row">
+            <label>Potential Outcome</label>
+          </Flexbox>
+          {((this.props.cgpStore.txHistoryStore.lastBlockVoted === 'allocation' || this.props.cgpStore.txHistoryStore.lastBlockVoted === 'both')
+            && isNumber(this.props.voteStore.pastAllocation)) &&
+            <Flexbox flexDirection="row" justifyContent="flex-end">
+              <label>{this.renderLoading()}</label>
+            </Flexbox>}
+        </Flexbox>
+        <Flexbox flexDirection="row" flexGrow={1} className="bar-chart">
+          <ChartLoader
+            chartName="currentVotes"
+            externalChartData={this.getData}
+            current={[{
+              amount: this.state.value,
+              count: pastAllocation === this.state.value ? outstanding : zenCount,
+            }]}
+          />
+        </Flexbox>
+      </Flexbox>
+    )
+  }
+
   renderVote() {
     const {
       voteStore: { inprogress },
     } = this.props
     return (
-      <Flexbox className="allocation-container" flexDirection="column"flexGrow={2} >
+      <Flexbox className="allocation-container" flexDirection="column"flexGrow={1} >
         <Flexbox className="allocation-input" flexDirection="column" >
           <label className="allocation-title">How would you like to distribute the allocation?</label>
 
@@ -158,18 +216,18 @@ class Allocation extends Component<Props, State> {
 
               <Flexbox flexDirection="row" justifyContent="space-between" className="word-labels">
                 <Flexbox flexDirection="row">
-                  <label>CGP</label>
+                  <label>Miner Reward</label>
                 </Flexbox>
                 <Flexbox flexDirection="row" justifyContent="flex-end">
-                  <label>Miner reward</label>
+                  <label>Common Goods Pool</label>
                 </Flexbox>
               </Flexbox>
 
               <Flexbox flexDirection="row" height="25px">
                 <Slider
-                  defaultValue={this.state.value}
-                  min={0}
-                  max={90}
+                  defaultValue={100 - this.state.value}
+                  min={10}
+                  max={100}
                   step={5}
                   onChange={this.onChange}
                   marks={marks}
@@ -178,11 +236,11 @@ class Allocation extends Component<Props, State> {
               </Flexbox>
 
               <Flexbox flexDirection="row" justifyContent="space-between" className="number-labels">
-                <Flexbox flexDirection="row">
-                  <label>{this.state.value}%</label>
+                <Flexbox flexDirection="row" >
+                  <label>{100 - this.state.value}%</label>
                 </Flexbox>
                 <Flexbox flexDirection="row" justifyContent="flex-end">
-                  <label>{100 - this.state.value}%</label>
+                  <label>{this.state.value}%</label>
                 </Flexbox>
               </Flexbox>
 
@@ -194,7 +252,7 @@ class Allocation extends Component<Props, State> {
                 disabled={this.isSubmitButtonDisabled}
                 onClick={this.onSubmitButtonClicked}
               >
-                {inprogress ? 'Voting' : 'Vote'}
+                {inprogress ? 'Voting' : this.voteText()}
               </ProtectedButton>
             </Flexbox>
 
@@ -202,8 +260,8 @@ class Allocation extends Component<Props, State> {
 
 
         </Flexbox>
-        <Flexbox className="allocation-response">
-          { this.renderSuccessResponse() }
+        <Flexbox>
+          { this.renderHasVoted() }
           { this.renderErrorResponse() }
         </Flexbox>
       </Flexbox>
@@ -211,68 +269,59 @@ class Allocation extends Component<Props, State> {
     )
   }
 
+  getTallyBlock() {
+    const { currentInterval, intervalLength } = this.props.cgpStore
+    return ((+currentInterval + 1) * +intervalLength) + 1
+  }
+
   render() {
     const {
       cgpStore: {
-        totalAllocationAmountVoted, resultAllocation,
-      },
-      voteStore: {
-        outstanding, utilized, pastAllocation, statusAllocation,
+        totalAllocationAmountVoted, resultAllocation, txHistoryStore,
       },
     } = this.props
-    const zenCount = Number(utilized) + Number(outstanding)
+    const { lastBlockVoted } = txHistoryStore
+    if (!lastBlockVoted) this.props.voteStore.statusAllocation = ''
     return (
       <Layout className="allocation">
         <Flexbox flexDirection="column" className="allocation-container">
           <Flexbox className="page-title" flexDirection="column">
-            <h1>Mining Allocation</h1>
+            <h1>Mining Reward</h1>
             <h3 className="page-title" >
               Vote for your preferred division of fund allocation
               between miners and the Common Goods Pool.
               Users can influence the outcome on a coin-weighted basis by
               voting on their preferred allocation correction prior to the end of the interval.
               Votes occur on a 10,000 block interval basis (100 blocks for the testnet).
-              Allocation correction is capped to 15% (5% for the testnet) per interval.
+              Allocation correction is capped to 50% (5% for the testnet) per interval.
             </h3>
             <hr />
             <span className="page-subtitle">
               Next estimated allocation correction: {this.calcNextDistribution().format('MMMM DD, YYYY')}
+              { ' ' } | Time remaining until end of voting period: {this.calcTimeRemaining()}
             </span>
           </Flexbox>
           <Flexbox flexDirection="row" className="box-bar" >
+            <BoxLabel firstLine="Tally Block" secondLine={this.getTallyBlock()} className="magnify" />
+            <BoxLabel firstLine="Blocks remaining until tally" secondLine={this.calcRemainingBlock()} className="magnify" />
+            <BoxLabel firstLine="Participated in the vote" secondLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} className="magnify" />
             <BoxLabel
               firstLine="Current Allocation"
               secondLine={(
                 <span className="form-row td">
-                  <span className="dot blue" /> CGP:
-                  <span className="reward" >{resultAllocation}%</span>
-                  <span className="dot off-white" /> Miner reward:
+                  <span className="dot off-white" /> Miner Reward:
                   <span className="reward" > {100 - resultAllocation}%</span>
+                  <span className="dot blue " /> CGP:
+                  <span className="reward" >{resultAllocation}%</span>
                 </span>)}
-              className="box magnify"
+              className="box-current magnify"
             />
-            <BoxLabel firstLine={`${totalAllocationAmountVoted ? kalapasToZen(totalAllocationAmountVoted) : 0} ZP`} secondLine="ZP have participated in the vote" className="magnify" />
-            <BoxLabel firstLine={this.calcRemainingBlock()} secondLine="Blocks remaining until end of voting period" />
-            <BoxLabel firstLine={this.calcTimeRemaining()} secondLine="Time remaining until end of voting period" />
           </Flexbox>
           <Flexbox flexDirection="row">
-            { this.renderVote() }
-
-            <Flexbox className="potential-outcome" flexDirection="column" flexGrow={1}>
-              <label className="allocation-title">Potential Outcome</label>
-              <Flexbox flexDirection="row" flexGrow={1} >
-                <ChartLoader
-                  chartName="currentVotes"
-                  externalChartData={this.getData}
-                  externalChartLoading={statusAllocation === 'success'}
-                  current={[{
-                    amount: this.state.value,
-                    count: pastAllocation === this.state.value ? outstanding : zenCount,
-                  }]}
-                  // TODO: add onclick event
-                />
-              </Flexbox>
+            <Flexbox flexDirection="column" width="100%" className="votes">
+              { this.renderVote() }
             </Flexbox>
+            { this.renderPotentialOutcome() }
           </Flexbox>
         </Flexbox>
       </Layout>

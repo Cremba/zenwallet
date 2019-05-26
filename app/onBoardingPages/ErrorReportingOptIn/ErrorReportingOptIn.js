@@ -8,12 +8,13 @@ import history from '../../services/history'
 import { BUG_SRC } from '../../constants/imgSources'
 import OnBoardingLayout from '../Layout/Layout'
 import ErrorReportingStore from '../../stores/errorReportingStore'
+import routes from '../../constants/routes'
 
 type Props = {
   errorReportingStore: ErrorReportingStore
 };
 
-const nextPage = '/portfolio'
+const nextPage = routes.ALLOCATION
 
 @inject('errorReportingStore')
 @observer

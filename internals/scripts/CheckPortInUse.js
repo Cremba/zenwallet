@@ -3,7 +3,7 @@ import chalk from 'chalk'
 import detectPort from 'detect-port';
 
 (function CheckPortInUse() {
-  const port: string = process.env.PORT || '1212'
+  const port: string = process.env.PORT || '1213'
 
   detectPort(port, (err: ?Error, availablePort: number) => {
     if (port !== String(availablePort)) {

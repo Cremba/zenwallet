@@ -4,8 +4,9 @@
   position: relative;
   padding: 20px;
   border-radius: 2px;
-  border: 1px solid $input-border-color;
+  border: 1px solid $secondary-grey;
   line-height: 1.5;
+  color: $light-white;
 
   svg {
     padding: 0 15px 0 0;

@@ -48,15 +48,15 @@ class VoteStore {
             this.pastPayoutAmount = kalapasToZen(this.pastPayout.amount)
             this.pastPayoutAddress = this.pastPayout.recipient
           } else {
-            this.pastPayout = null
-            this.payoutAmount = null
-            this.payoutAddress = null
+            this.pastPayout = ''
+            this.pastPayoutAmount = ''
+            this.pastPayoutAddress = ''
           }
         } else {
-          this.payoutAddress = null
-          this.payoutAmount = null
-          this.pastAllocation = null
-          this.pastPayout = null
+          this.pastPayoutAddress = ''
+          this.pastPayoutAmount = ''
+          this.pastAllocation = ''
+          this.pastPayout = ''
         }
         this.error = ''
       })
@@ -66,7 +66,7 @@ class VoteStore {
     }
   }
 
-  @action
+  @action.bound
   async createAllocationVote(password) {
     try {
       this.inprogress = true
@@ -81,7 +81,7 @@ class VoteStore {
         this.statusAllocation = 'success'
         setTimeout(() => {
           this.statusAllocation = ''
-        }, 15000)
+        }, 50000)
       })
     } catch (error) {
       runInAction(() => {
@@ -97,7 +97,7 @@ class VoteStore {
   }
 
 
-  @action
+  @action.bound
   async createPayoutVote(password) {
     try {
       this.inprogress = true
@@ -142,12 +142,7 @@ class VoteStore {
   }
 
   reset() {
-    this.allocationAmount = ''
-    this.payoutAddress = ''
-    this.payoutAmount = ''
     this.inprogress = false
-    this.statusAllocation = ''
-    this.statusPayout = ''
     this.errorMessage = ''
   }
 }

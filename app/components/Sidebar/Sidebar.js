@@ -34,7 +34,7 @@ class Sidebar extends Component<Props> {
   }
   get bottomDataClassNameOffline() {
     return cx('network-data-point bottom', {
-      'with-bottom-bar-and-offline': true && this.isBottomBarPresent,
+      'with-bottom-bar-and-offline': true,
       'with-bottom-bar': true,
     })
   }
@@ -208,7 +208,7 @@ class Sidebar extends Component<Props> {
     return (
       <nav className={`sidebar ${this.props.className}`}>
         <div className="logo">
-          <Link to={routes.PORTFOLIO}>
+          <Link to={routes.ALLOCATION}>
             <img src={LOGO_SRC} alt="Zen Protocol Logo" />
           </Link>
         </div>

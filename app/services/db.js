@@ -11,7 +11,7 @@ const electronApp = (electron.app || electron.remote.app)
 const fileName = 'zen-wallet-yesod-db.json'
 
 const appDataPath = electronApp.getPath('appData')
-const userDataPath = path.join(appDataPath, 'zenwallet')
+const userDataPath = path.join(appDataPath, 'zenwallet-yesod')
 
 // console.log('db folder:', userDataPath)
 
@@ -50,9 +50,13 @@ db.defaults({
     zenNodeVersion: null,
   },
   'txCountInLastLogin-testnet': 0,
-  'txCountInLastLogin-mainnet': 0,
+  'txCountInLastLogin-main': 0,
   'txCountInLastVisitToTransactionsRoute-testnet': 0,
-  'txCountInLastVisitToTransactionsRoute-mainnet': 0,
+  'txCountInLastVisitToTransactionsRoute-main': 0,
+  'allocation-testnet': null,
+  'allocation-main': null,
+  'payout-testnet': { amount: null, recipient: null },
+  'payout-main': { amount: null, recipient: null },
 
 }).write()
 

@@ -32,6 +32,18 @@ export default function Chart(props) {
         pointWidth: 5,
         borderColor: COLORS.bg,
         stacking: 'inverted',
+        series: {
+          states: {
+            hover: {
+              enabled: false,
+            },
+          },
+        },
+        events: {
+          legendItemClick() {
+            return false
+          },
+        },
       },
     },
     title: {
@@ -69,7 +81,15 @@ export default function Chart(props) {
       },
     },
     legend: {
-      enabled: false,
+      enabled: true,
+      itemStyle: {
+        color: '$off-white',
+        fontWeight: 'bold',
+      },
+      itemHoverStyle: {
+        color: '$off-white',
+        fontWeight: 'bold',
+      },
     },
     tooltip: {
       style: {

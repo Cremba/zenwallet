@@ -5,7 +5,7 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
 export default function Loading({ className, loadingText, ...props }) {
   return (
-    <div className={classNames('Loading', className)} {...props}>
+    <div className={classNames(className)} {...props}>
       <span>
         <FontAwesomeIcon icon={['far', 'spinner']} spin />
         {loadingText}
@@ -16,10 +16,10 @@ export default function Loading({ className, loadingText, ...props }) {
 
 Loading.propTypes = {
   loadingText: PropTypes.string,
-  // eslint-disable-next-line
   className: PropTypes.string,
 }
 
 Loading.defaultProps = {
   loadingText: ' Loading...',
+  className: 'Loading',
 }

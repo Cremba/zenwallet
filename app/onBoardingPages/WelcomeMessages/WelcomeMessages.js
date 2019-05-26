@@ -23,7 +23,8 @@ const pageTexts = [
     description: 'We care about your safety ­– so please read the following:',
     bullets: [
       'There is no “Import Wallet” option in this wallet - since it is not recommended to use your real seed with the release candidate.',
-      'You are going to receive 50 ZP when you create your new wallet”',
+      'Note that some functionality of the wallet were inhibited to show the full potential of the Yesod Release',
+      'You are going to receive 50 ZP when you create your new wallet',
     ],
   },
 ]

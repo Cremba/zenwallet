@@ -24,8 +24,9 @@ class CgpStore {
     timeoutInterval: 1500,
   })
 
-  constructor(networkStore) {
+  constructor(networkStore, txHistoryStore) {
     this.networkStore = networkStore
+    this.txHistoryStore = txHistoryStore
   }
 
   @action
@@ -39,17 +40,18 @@ class CgpStore {
 
   get getFund() {
     return kalapasToZen(+this.fund) +
-      ((((this.currentInterval + 1) * (this.intervalLength)) - this.networkStore.headers)
-      * ((this.resultAllocation / 100) * 50))
+      ((((this.currentInterval + 1) * (this.intervalLength)) - this.networkStore.blocks)
+        * ((this.resultAllocation / 100) * 50))
   }
 
   @action.bound
   async fetch() {
     try {
+      this.txHistoryStore.fetch()
       const cgp = await getCgp()
       const { tallies } = cgp
       runInAction(() => {
-        this.currentInterval = Math.floor(this.networkStore.headers / this.intervalLength)
+        this.currentInterval = Math.floor((this.networkStore.blocks - 1) / this.intervalLength)
         this.resultAllocation = cgp.resultAllocation
         this.resultPayout = isEmpty(cgp.resultPayout) ? undefined : cgp.resultPayout
         this.fund = cgp.fund
@@ -62,23 +64,33 @@ class CgpStore {
           this.error = 'No Data'
         } else {
           const currentTally = tallies.filter(data => data.interval === this.currentInterval)[0]
-          this.interval = currentTally.interval
-          this.allocationVote =
-            !isEmpty(currentTally.allocation) ? currentTally.allocation.votes : []
-          this.totalAllocationAmountVoted =
-            this.getAmountVoted(this.allocationVote)
-          this.payoutVote =
-            !isEmpty(currentTally.payout) ? this.setData(currentTally.payout.votes) : []
-          this.totalPayoutAmountVoted =
-            this.getAmountVoted(currentTally.payout.votes ? currentTally.payout.votes : [])
-          this.error = ''
+          if (isEmpty(currentTally)) {
+            this.allocationVote = []
+            this.payoutVote = []
+            this.totalAllocationAmountVoted = 0
+            this.totalPayoutAmountVoted = 0
+          } else {
+            this.interval = currentTally.interval
+            this.allocationVote =
+              !isEmpty(currentTally.allocation) ? currentTally.allocation.votes : []
+            this.totalAllocationAmountVoted =
+              this.getAmountVoted(this.allocationVote)
+            this.payoutVote =
+              !isEmpty(currentTally.payout) ? this.setData(currentTally.payout.votes) : []
+            this.totalPayoutAmountVoted =
+              this.getAmountVoted(currentTally.payout.votes ? currentTally.payout.votes : [])
+            this.error = ''
+          }
         }
       })
     } catch (err) {
       console.error('error getting cgp', err)
-      runInAction(() => { this.error = 'Error getting cgp' })
+      runInAction(() => {
+        this.error = 'Error getting cgp'
+      })
     }
-    const coinBaseTimestamp = await getGenesisTimestamp()
+    const coinBaseTimestamp =
+      await getGenesisTimestamp(this.networkStore.blocks)
     runInAction(() => {
       this.genesisTimestamp = coinBaseTimestamp
     })

@@ -30,7 +30,7 @@ const sendTxStore = new SendTxStore()
 const deployContractStore = new DeployContractStore()
 const runContractStore = new RunContractStore(activeContractsStore)
 const blockchainLogsStore = new BlockchainLogsStore()
-const cgpStore = new CgpStore(networkStore)
+const cgpStore = new CgpStore(networkStore, txHistoryStore)
 const voteStore = new VoteStore()
 
 export default {

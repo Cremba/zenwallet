@@ -1,7 +1,7 @@
 {
-  "name": "@zen/zen-wallet",
+  "name": "@zen/zen-wallet-yesod",
   "version": "1.0.0-beta01",
-  "description": "Zen Protocol Wallet",
+  "description": "Zen Protocol Wallet Yesod",
   "main": "app/main.prod.js",
   "scripts": {
     "auto-release": "internals/auto-release.sh",
@@ -48,12 +48,8 @@
   "browserslist": "electron 1.6",
   "build": {
     "productName": "Zen-Protocol-Wallet-Yesod",
-    "extraResources": "node_modules/@zen/zen-node",
-    "appId": "com.zenprotocol.wallet",
-    "publish": {
-      "provider": "github",
-      "publishAutoUpdate": false
-    },
+    "extraResources": "node_modules/@zen/zen-node-yesod",
+    "appId": "com.zenprotocol.wallet-yesod",
     "dmg": {
       "contents": [
         {
@@ -90,10 +86,6 @@
       "buildResources": "resources",
       "output": "release"
     }
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/zenprotocol/zenwallet.git"
   },
   "bugs": {
     "url": "https://github.com/zenprotocol/zenwallet/issues"
@@ -191,7 +183,7 @@
     "webpack-merge": "^4.1.1"
   },
   "dependencies": {
-    "@zen/zen-node": "^1.0.0-beta01",
+    "@zen/zen-node-yesod": "1.0.0-beta01",
     "@zen/zenjs": "0.0.25",
     "arch": "^2.1.1",
     "axios": "^0.18.0",
@@ -206,6 +198,7 @@
     "decimal.js": "^10.0.1",
     "devtron": "^1.4.0",
     "electron": "^3.0.13",
+    "electron-builder-squirrel-windows": "^20.42.0",
     "electron-context-menu": "^0.9.1",
     "electron-debug": "^1.5.0",
     "flexbox-react": "^4.4.0",
@@ -251,7 +244,7 @@
     "npm": ">=4.x"
   },
   "files": [
-    "bin/zen-wallet.js",
+    "bin/zen-wallet-yesod.js",
     "app.html",
     "main.prod.js",
     "main.prod.js.map",
@@ -259,6 +252,6 @@
     "app/assets/**/*"
   ],
   "bin": {
-    "zen-wallet": "./bin/zen-wallet.js"
+    "zen-wallet-yesod": "./bin/zen-wallet-yesod.js"
   }
 }

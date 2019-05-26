@@ -66,8 +66,8 @@ export async function getPublicPkHash(publicAddress: string): Promise<string> {
   return response.data.pkHash
 }
 
-export async function getGenesisTimestamp() {
-  const response = await axios.get(`${getServerAddress()}/blockchain/block?blockNumber=2`)
+export async function getGenesisTimestamp(blockNumber: number) {
+  const response = await axios.get(`${getServerAddress()}/blockchain/block?blockNumber=${blockNumber}`)
   return response.data.header.timestamp
 }
 
@@ -92,6 +92,11 @@ type Payout = {
     amount: number
   }
 };
+
+export async function getVoteFromTx(address: Address) {
+  const response = await axios.get(`${getServerAddress()}/blockchain/transaction?hash=${address}`)
+  return response.data
+}
 
 export async function postPayoutVote(tx: Allocation & Password): Promise<string> {
   const { password, payout } = tx
@@ -221,7 +226,8 @@ export type TransactionResponse = {
   txHash: Hash,
   asset: string,
   amount: number,
-  confirmations: number
+  confirmations: number,
+  lock: {}
 };
 
 export async function getTxHistory({
@@ -279,7 +285,6 @@ export async function postImportWallet(secretPhraseArray: observableArray, passw
     words: secretPhraseArray,
     password,
   }
-  console.log('postImportWallet data', data)
   const response = await axios.post(`${getServerAddress()}/wallet/import`, data, {
     headers: { 'Content-Type': 'application/json' },
   })

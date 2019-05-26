@@ -5,7 +5,7 @@ import Chart from './Chart'
 
 export default function BarChart(props) {
   const {
-    xAxisType, data, seriesTitle, tooltipHeaderFormat, tooltipPointFormat, current,
+    xAxisType, data, tooltipHeaderFormat, tooltipPointFormat, current,
   } = props
   const config = {
     chart: {
@@ -14,7 +14,7 @@ export default function BarChart(props) {
     xAxis: {
       type: xAxisType,
       min: 0,
-      max: 99,
+      max: 90,
       labels: {
         rotation: -45,
         style: {
@@ -28,16 +28,15 @@ export default function BarChart(props) {
     },
     series: [
       {
-        name: seriesTitle,
+        name: 'My current vote',
         data: current,
         color: '#fd3a3a',
       },
       {
-        name: seriesTitle,
+        name: 'Community Vote',
         data,
       },
     ],
-
     tooltip: {
       headerFormat: tooltipHeaderFormat,
       pointFormat: tooltipPointFormat,

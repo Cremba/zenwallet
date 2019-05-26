@@ -36,8 +36,8 @@ class TermsOfService extends Component<Props> {
     const { errorReportingStore } = this.props
     postRedeemCrowdsaleTokens()
     const nextPage = errorReportingStore.isReporting ?
-      '/portfolio' :
-      '/error-reporting-opt-in'
+      routes.ALLOCATION :
+      routes.ERROR_REPORTING_OPT_IN
     history.push(nextPage)
   }
 

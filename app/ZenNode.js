@@ -5,7 +5,7 @@ import path from 'path'
 
 import _ from 'lodash'
 import { ipcMain, dialog } from 'electron'
-import spwanZenNodeChildProcess from '@zen/zen-node'
+import spwanZenNodeChildProcess from '@zen/zen-node-yesod'
 
 import { shout } from './utils/dev'
 import db from './services/db'
@@ -182,8 +182,8 @@ export default ZenNode
 export function getZenNodePath() {
   return isInstalledWithInstaller()
     // $FlowFixMe
-    ? path.join(process.resourcesPath, 'node_modules', '@zen', 'zen-node')
-    : path.join(__dirname, '..', 'node_modules', '@zen', 'zen-node')
+    ? path.join(process.resourcesPath, 'node_modules', '@zen', 'zen-node-yesod')
+    : path.join(__dirname, '..', 'node_modules', '@zen', 'zen-node-yesod')
 }
 
 function isInstalledWithInstaller() {

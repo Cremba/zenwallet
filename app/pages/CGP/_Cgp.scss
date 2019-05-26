@@ -1,5 +1,6 @@
 @import "styles/Variables";
 
+
 .line-break {
   width: 100%;
   margin-left: auto;
@@ -8,14 +9,37 @@
 
 .box-bar {
   margin:0 -10px;
+
+  .magnify {
+    background: $light-grey;
+  }
 }
 .page-subtitle { color: $pinkish-grey; }
+
+.vote {
+  margin-right: 75px;
+}
+
+.test {
+  border: 2px solid $light-green;
+}
+
+.react-table .-highlight .rt-tbody .rt-tr:not(.-padRow):hover {
+  background: rgba(0, 255, 0, 0.05);
+}
 
 .vote-box {
   background: $light-grey-2;
   padding: 24px;
-  border-left: 2px solid ;
+  border-left: 2px solid;
   margin-right: 20px;
+  width: 100%;
+}
+
+.vote-box-message {
+  padding: 24px;
+  margin-right: 20px;
+  margin-top: 10px;
   width: 100%;
 }
 
@@ -23,9 +47,6 @@
   margin-top: 20px;
 }
 
-.magnify {
-  background: $light-grey;
-}
 
 .payout-result {
   background: $darker-gray;
@@ -46,12 +67,15 @@ h3.vote-title {
 }
 
 h3.page-title {
-  width: 960px;
+  width: 80%;
+  min-width: 600px;
+  max-width: 960px;
 }
 
 .proposal { margin: 24px; }
 
 .active-proposal {
   background: $darker-gray;
-  height: 400px;
+  height: 600px;
+  width: 100%;
 }

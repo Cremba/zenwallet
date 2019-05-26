@@ -100,7 +100,7 @@ class secretPhraseStore {
         this.networkStore.initPolling()
         this.txHistoryStore.initPolling()
         this.txHistoryStore.fetch()
-        history.push(routes.PORTFOLIO)
+        history.push(routes.ALLOCATION)
       })
     } catch (error) {
       runInAction(() => {
