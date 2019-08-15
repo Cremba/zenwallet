@@ -1,4 +1,38 @@
+@import "styles/Variables";
+
 .cgp {
+  section {
+    margin-bottom: 22px;
+
+    &::last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .section-title {
+    h1 {
+      color: $off-white;
+      margin-bottom: 10px;
+    }
+  }
+
+  .allocation-form {
+    padding-top: 22px;
+
+    .allocation-input {
+      .input-range__track--active {
+        background-color: $blue;
+      }
+      .input-range__slider {
+        background-color: $blue-focus;
+        border-color: $blue-focus;
+      }
+      .input-range__label-container {
+        left: 0;
+      }
+    }
+
+  }
   .remove-container {
     label {
       display: block;

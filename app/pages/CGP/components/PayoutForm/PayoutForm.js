@@ -64,7 +64,7 @@ class PayoutForm extends Component {
       portfolioStore,
     } = this.props
     return (
-      <Flexbox flexDirection="column" className="form-container">
+      <Flexbox flexDirection="column">
         <Flexbox flexDirection="column" className="destination-address-input form-row">
           <label htmlFor="address">Address</label>
           <Flexbox flexDirection="row" className="destination-address-input">
