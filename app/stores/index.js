@@ -7,6 +7,7 @@ import RunContractStore from './runContractStore'
 import ActiveContractsStore from './activeContractsStore'
 import NetworkStore from './networkStore'
 import AuthorizedProtocolStore from './authorizedProtocolStore'
+import CGPStore from './cgpStore'
 import RedeemTokensStore from './redeemTokensStore'
 import SecretPhraseStore from './secretPhraseStore'
 import Store from './blockchainLogsStore'
@@ -29,6 +30,7 @@ const runContractStore = new RunContractStore(activeContractsStore)
 const blockchainLogsStore = new Store()
 const authorizedProtocolStore =
   new AuthorizedProtocolStore(publicAddressStore, networkStore, txHistoryStore)
+const cgpStore = new CGPStore(publicAddressStore, networkStore, txHistoryStore, portfolioStore)
 
 export default {
   portfolioStore,
@@ -44,4 +46,5 @@ export default {
   blockchainLogsStore,
   errorReportingStore,
   authorizedProtocolStore,
+  cgpStore,
 }

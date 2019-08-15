@@ -57,7 +57,20 @@ input[type=password],
   position: absolute;
   right: 1.5px;
   top: 41.5px;
-  padding: 11px;
+  padding: 10px;
+	font-size: 12px;
+  text-transform: uppercase;
+	border-left: solid 1px $input-border-color;
+	color: $blue;
+	background: $dark-grey-2;
+}
+
+.chosenAssetNameNoLabel {
+	display: inline;
+  position: absolute;
+  right: 1.5px;
+  top: 1.5px;
+  padding: 10px;
 	font-size: 12px;
   text-transform: uppercase;
 	border-left: solid 1px $input-border-color;

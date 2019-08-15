@@ -20,7 +20,8 @@ type Asset = {
 type Props = {
   asset: string,
   portfolioStore: PortfolioStore,
-  onUpdateParent: ({ asset: string }) => void
+  onUpdateParent: ({ asset: string }) => void,
+  showLabel: boolean
 };
 
 type State = {
@@ -49,22 +50,28 @@ class AutoSuggestAssets extends Component<Props, State> {
     evt: SyntheticMouseEvent<HTMLInputElement>,
     { suggestion }: { suggestion: Asset },
   ) => {
-    this.setState({
-      suggestionInputValue: suggestion.asset,
-    }, this.updateParent)
+    this.setState(
+      {
+        suggestionInputValue: suggestion.asset,
+      },
+      this.updateParent,
+    )
   }
 
   onChange = (
     evt: SyntheticEvent<HTMLInputElement>,
     { newValue, method }: { newValue: string, method: string },
   ) => {
-    const userPressedUpOrDown = (method === 'down' || method === 'up')
+    const userPressedUpOrDown = method === 'down' || method === 'up'
     if (userPressedUpOrDown) {
       return
     }
-    this.setState({
-      suggestionInputValue: newValue.trim(),
-    }, this.updateParent)
+    this.setState(
+      {
+        suggestionInputValue: newValue.trim(),
+      },
+      this.updateParent,
+    )
   }
   updateParent = () => {
     if (!this.isValid) {
@@ -101,7 +108,7 @@ class AutoSuggestAssets extends Component<Props, State> {
 
   get hasError() {
     const { suggestions, suggestionInputValue } = this.state
-    return !this.isValid && (suggestions.length === 0) && (suggestionInputValue.length > 0)
+    return !this.isValid && suggestions.length === 0 && suggestionInputValue.length > 0
   }
   get isValid() {
     return !!this.getChosenAsset
@@ -120,17 +127,14 @@ class AutoSuggestAssets extends Component<Props, State> {
 
   renderChosenAssetName() {
     const chosenAssetName = this.props.portfolioStore.getAssetName(this.state.suggestionInputValue)
+    const { showLabel } = this.props
     if (chosenAssetName) {
-      return (
-        <div className="chosenAssetName">{chosenAssetName}</div>
-      )
+      return <div className={showLabel ? 'chosenAssetName' : 'chosenAssetNameNoLabel'}>{chosenAssetName}</div>
     }
   }
 
   render() {
-    const {
-      suggestionInputValue, suggestions,
-    } = this.state
+    const { suggestionInputValue, suggestions } = this.state
     const inputProps = {
       type: 'search',
       placeholder: 'Start typing the asset name',
@@ -144,7 +148,7 @@ class AutoSuggestAssets extends Component<Props, State> {
 
     return (
       <Flexbox flexGrow={1} flexDirection="column" className="select-asset">
-        <label htmlFor="asset">Asset</label>
+        {this.props.showLabel && <label htmlFor="asset">Asset</label>}
 
         <Autosuggest
           suggestions={suggestions}
@@ -159,9 +163,12 @@ class AutoSuggestAssets extends Component<Props, State> {
         {this.renderChosenAssetName()}
         {this.renderErrorMessage()}
       </Flexbox>
-
     )
   }
+}
+
+AutoSuggestAssets.defaultProps = {
+  showLabel: true,
 }
 
 export default AutoSuggestAssets

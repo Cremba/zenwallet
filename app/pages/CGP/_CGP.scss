@@ -1,0 +1,22 @@
+.cgp {
+  .remove-container {
+    label {
+      display: block;
+      visibility: hidden;
+    }
+    .btn-plus-minus {
+      box-sizing: content-box;
+      cursor: pointer;
+      background-color: transparent;
+      border: none;
+      padding: 0 0 0 22px;
+      min-width: 0;
+      font-size: 20px;
+      align-self: flex-end;
+    
+      &:focus {
+        outline: 0;
+      }
+    }
+  }
+}
