@@ -92,18 +92,16 @@ class AutoSuggestAssets extends Component<Props, State> {
   }
 
   getSuggestions = (value: string) => {
-    const filtered = this.props.cgp ?
-      this.props.cgpStore.filteredBalances(value)
-      :
-      this.props.portfolioStore.filteredBalances(value)
+    const filtered = this.props.cgp
+      ? this.props.cgpStore.filteredBalances(value)
+      : this.props.portfolioStore.filteredBalances(value)
     return this.valueIsExactMatch(value) ? [] : filtered
   }
 
   valueIsExactMatch(value: string) {
-    const filtered = this.props.cgp ?
-      this.props.cgpStore.filteredBalances(value)
-      :
-      this.props.portfolioStore.filteredBalances(value)
+    const filtered = this.props.cgp
+      ? this.props.cgpStore.filteredBalances(value)
+      : this.props.portfolioStore.filteredBalances(value)
     return filtered.length === 1 && filtered[0].asset === value
   }
 
@@ -126,13 +124,18 @@ class AutoSuggestAssets extends Component<Props, State> {
     return !!this.getChosenAsset
   }
   renderErrorMessage() {
+    const { cgp } = this.props
     if (!this.hasError) {
       return null
     }
     return (
       <div className="input-message error">
         <FontAwesomeIcon icon={['far', 'exclamation']} />
-        <span>You don&apos;t have such an asset</span>
+        {cgp ? (
+          <span>The cgp doesn&apos;t have such an asset</span>
+        ) : (
+          <span>You don&apos;t have such an asset</span>
+        )}
       </div>
     )
   }
@@ -141,7 +144,11 @@ class AutoSuggestAssets extends Component<Props, State> {
     const chosenAssetName = this.props.portfolioStore.getAssetName(this.state.suggestionInputValue)
     const { showLabel } = this.props
     if (chosenAssetName) {
-      return <div className={showLabel ? 'chosenAssetName' : 'chosenAssetNameNoLabel'}>{chosenAssetName}</div>
+      return (
+        <div className={showLabel ? 'chosenAssetName' : 'chosenAssetNameNoLabel'}>
+          {chosenAssetName}
+        </div>
+      )
     }
   }
 
