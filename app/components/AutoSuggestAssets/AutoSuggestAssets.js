@@ -9,6 +9,7 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
 import { truncateString } from '../../utils/helpers'
 import PortfolioStore from '../../stores/portfolioStore'
+import CgpStore from '../../stores/cgpStore'
 
 const getSuggestionValue = suggestion => suggestion.asset
 
@@ -20,8 +21,10 @@ type Asset = {
 type Props = {
   asset: string,
   portfolioStore: PortfolioStore,
+  cgpStore: CgpStore,
   onUpdateParent: ({ asset: string }) => void,
-  showLabel: boolean
+  showLabel: boolean,
+  cgp: boolean
 };
 
 type State = {
@@ -29,7 +32,7 @@ type State = {
   suggestions: Array<Asset>
 };
 
-@inject('portfolioStore')
+@inject('portfolioStore', 'cgpStore')
 @observer
 class AutoSuggestAssets extends Component<Props, State> {
   state = {
@@ -82,16 +85,25 @@ class AutoSuggestAssets extends Component<Props, State> {
     this.props.onUpdateParent({ asset })
   }
   get getChosenAsset() {
+    if (this.props.cgp) {
+      return this.props.cgpStore.assets.find(a => a.asset === this.state.suggestionInputValue)
+    }
     return this.props.portfolioStore.assets.find(a => a.asset === this.state.suggestionInputValue)
   }
 
   getSuggestions = (value: string) => {
-    const filtered = this.props.portfolioStore.filteredBalances(value)
+    const filtered = this.props.cgp ?
+      this.props.cgpStore.filteredBalances(value)
+      :
+      this.props.portfolioStore.filteredBalances(value)
     return this.valueIsExactMatch(value) ? [] : filtered
   }
 
   valueIsExactMatch(value: string) {
-    const filtered = this.props.portfolioStore.filteredBalances(value)
+    const filtered = this.props.cgp ?
+      this.props.cgpStore.filteredBalances(value)
+      :
+      this.props.portfolioStore.filteredBalances(value)
     return filtered.length === 1 && filtered[0].asset === value
   }
 

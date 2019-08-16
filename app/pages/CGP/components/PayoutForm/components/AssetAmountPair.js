@@ -35,6 +35,7 @@ class AssetAmountPair extends Component {
     return (
       <React.Fragment>
         <AutoSuggestAssets
+          cgp
           asset={asset}
           onUpdateParent={this.assetChangedHandler}
           showLabel={showLabels}

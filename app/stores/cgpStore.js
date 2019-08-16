@@ -1,11 +1,13 @@
 // @flow
-import { observable, action, autorun, computed } from 'mobx'
+import { observable, action, autorun, computed, runInAction } from 'mobx'
 import { Wallet } from '@zen/zenjs'
-import { last, findIndex, keys } from 'lodash'
+import { last, findIndex, keys, find } from 'lodash'
 import { Decimal } from 'decimal.js'
 
 import { MAINNET } from '../constants/constants'
-import { isValidAddress } from '../utils/helpers'
+import { isValidAddress, numberWithCommas } from '../utils/helpers'
+import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
+import { getContractBalance } from '../services/api-service'
 
 class CGPStore {
   constructor(publicAddressStore, networkStore, txHistoryStore, portfolioStore) {
@@ -22,6 +24,7 @@ class CGPStore {
       }
     })
   }
+  @observable assetCGP = []
   @observable intervalLength = 100 // TODO: edit 100 for final release
   @observable currentInterval = 0
   @observable allocation = 0
@@ -43,7 +46,36 @@ class CGPStore {
     // TODO call blockchain/cgp/current and calculate the min/max zp/ratio
     // min and max should be toFixed(3)
   }
+  getBalanceFor(asset) {
+    const result = find(this.assets, { asset })
+    return result ? result.balance : 0
+  }
+  @action
+  async fetchAssets() {
+    const assets = await getContractBalance(this.networkStore.chain, this.contractId,0,65535)
+    runInAction(() => this.assetCGP.replace(assets))
+  }
 
+  get assets() {
+    return this.assetCGP.map(asset => ({
+      ...asset,
+      name: this.portfolioStore.getAssetName(asset.asset),
+      balance: isZenAsset(asset.asset) ? kalapasToZen(asset.balance) : asset.balance,
+      balanceDisplay: isZenAsset(asset.asset)
+        ? zenBalanceDisplay(asset.balance)
+        : numberWithCommas(asset.balance),
+    }))
+  }
+  filteredBalances = query => {
+    if (!this.assets.length) {
+      return []
+    }
+    if (!query) {
+      return this.assets
+    }
+    return this.assets.filter(asset => (asset.name.indexOf(query) > -1)
+      || (asset.asset.indexOf(query) > -1))
+  }
   @computed
   get aggregatedAssetAmounts() {
     return this.assetAmounts.reduce((aggregated, cur) => {

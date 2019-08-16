@@ -61,7 +61,7 @@ class PayoutForm extends Component {
   render() {
     const {
       cgpStore: { assetAmounts, address },
-      portfolioStore,
+      cgpStore,
     } = this.props
     return (
       <Flexbox flexDirection="column">
@@ -97,7 +97,7 @@ class PayoutForm extends Component {
                 showLabels={index === 0}
                 asset={item.asset}
                 amount={item.amount}
-                assetBalance={portfolioStore.getBalanceFor(item.asset)}
+                assetBalance={cgpStore.getBalanceFor(item.asset)}
                 onChange={data => {
                   this.assetAmountChangeHandler(data, index)
                 }}

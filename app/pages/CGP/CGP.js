@@ -32,9 +32,9 @@ import PayoutForm from './components/PayoutForm/PayoutForm'
 @inject('cgpStore', 'publicAddressStore', 'portfolioStore', 'networkStore')
 @observer
 class CGP extends Component {
-  // componentDidMount() {
-  //   this.props.publicAddressStore.fetch()
-  // }
+  componentDidMount() {
+    this.props.cgpStore.fetchAssets()
+  }
 
   resetPayoutForm = () => this.props.cgpStore.resetPayout()
 
