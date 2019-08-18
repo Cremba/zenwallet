@@ -40,7 +40,7 @@ class CGPStore {
   @observable contractId =
     this.networkStore.chain === MAINNET
       ? 'czen1qqqqqqq8rzylch7w03dmym9zad7vuvs4akp5azdaa6hm7gnc7wk287k9qgs7409ea'
-      : 'ctzn1qqqqqqq8rzylch7w03dmym9zad7vuvs4akp5azdaa6hm7gnc7wk287k9qgssqskgv'
+      : 'ctzn1qqqqqqq8jfkej4gvgr9txgmfuewmy0hm3g4w7zr8e3d34sy8gsuysdfttvvkswr00'
 
   calculateAllocationMinMax() {
     // TODO call blockchain/cgp/current and calculate the min/max zp/ratio

@@ -1,7 +1,9 @@
 // @flow
 
+import { Buffer } from 'buffer'
+
 import bech32 from 'bech32'
-import Data from '@zen/zenjs/build/src/Data'
+import { Data } from '@zen/zenjs'
 import { sha3_256 as sha } from 'js-sha3'
 import BigInteger from 'bigi'
 
@@ -31,6 +33,15 @@ export const truncateString = (string: ?string) => {
   }
 }
 
+export const convertAllocation = (allocation: number): number => (Math.floor(allocation) / 50) * 100
+
+export const serialize = (data) => {
+  const buffer = Buffer.alloc(data.getSize())
+  data.write(buffer, 0)
+
+  return buffer.toString('hex')
+}
+
 export const stringToNumber = (str: ?string) => str && parseFloat(str.replace(/,/g, ''))
 
 export const isValidAddress = (address: ?string, type?: 'contract' | 'pubKey' = 'pubKey'): boolean => {
@@ -54,10 +65,10 @@ export const hashVoteData = (commitID: string, interval = 1) => Buffer.from(sha
   .update(sha(Data.serialize(new Data.UInt32(BigInteger.valueOf(interval)))))
   .update(sha(Data.serialize(new Data.String(commitID)))).toString(), 'hex')
 
-export const payloadData = (address, messageBody, commitId) => {
+export const payloadData = (address, messageBody, command) => {
   const data = {
     address,
-    command: commitId,
+    command,
     options: {
       returnAddress: false,
     },

@@ -10,6 +10,11 @@ import cx from 'classnames'
 // import * as mobx from 'mobx'
 // import BigInteger from 'bigi'
 // import { Data } from '@zen/zenjs'
+import * as mobx from 'mobx'
+import BigInteger from 'bigi'
+import { Data } from '@zen/zenjs'
+import { sha3_256 as sha } from 'js-sha3'
+import { Allocation, Payout } from '@zen/zenjs/build/src/Consensus/Types/VoteData'
 
 // import CGPStore from '../../stores/cgpStore'
 // import PublicAddressStore from '../../stores/publicAddressStore'
@@ -24,22 +29,76 @@ import ProtectedButton from '../../components/Buttons'
 // import FormResponseMessage from '../../components/FormResponseMessage'
 // import ExternalLink from '../../components/ExternalLink'
 // import { kalapasToZen } from '../../utils/zenUtils'
+import { payloadData, convertAllocation, serialize} from '../../utils/helpers'
+
 
 // lior
 import AllocationForm from './components/AllocationForm/AllocationForm'
 import PayoutForm from './components/PayoutForm/PayoutForm'
 
-@inject('cgpStore', 'publicAddressStore', 'portfolioStore', 'networkStore')
+@inject('cgpStore', 'publicAddressStore', 'portfolioStore', 'networkStore', 'runContractStore', 'authorizedProtocolStore')
 @observer
 class CGP extends Component {
   componentDidMount() {
-    this.props.cgpStore.fetchAssets()
+    this.props.cgpStore.fetchAssets().then().catch()
   }
 
   resetPayoutForm = () => this.props.cgpStore.resetPayout()
 
-  submitAllocationVote = () => this.props.cgpStore.submitAllocationVote()
-  submitPayoutVote = () => this.props.cgpStore.submitPayoutVote()
+  submitAllocationVote = async (confirmedPassword: string) => {
+    const {
+      cgpStore: {
+        allocation,
+        contractId,
+        currentInterval,
+      },
+    } = this.props
+    const stringAllocation = 'Allocation'
+    const all = serialize(new Allocation(convertAllocation(allocation).toString()))
+    const message = Buffer.from(sha
+      .update(sha(Data.serialize(new Data.UInt32(BigInteger.valueOf(currentInterval)))))
+      .update(sha(Data.serialize(new Data.String(all)))).toString(), 'hex')
+    await this.props.publicAddressStore.getKeys(confirmedPassword)
+    const arrayPromise = mobx.toJS(this.props.publicAddressStore.publicKeys).map(async item => {
+      const { publicKey, path } = item
+      const signature =
+        await this.props.authorizedProtocolStore.signMessage(message, path, confirmedPassword)
+      return [publicKey, new Data.Signature(signature)]
+    })
+    const data = await Promise.all(arrayPromise)
+      .then((signatures) => new Data.Dictionary([[stringAllocation, new Data.String(all)], ['Signature', new Data.Dictionary(signatures)]]))
+      .catch(error => console.log(error))
+    await this.props.runContractStore
+      .run(confirmedPassword, payloadData(contractId, data, stringAllocation))
+  }
+
+  submitPayoutVote = async (confirmedPassword: string) => {
+    const {
+      cgpStore: {
+        address,
+        assetAmounts,
+        contractId,
+        currentInterval,
+      },
+    } = this.props
+    const stringPayout = 'Payout'
+    const payout = serialize(new Payout({ kind: 'PKRecipient', address }, assetAmounts))
+    const message = Buffer.from(sha
+      .update(sha(Data.serialize(new Data.UInt32(BigInteger.valueOf(currentInterval)))))
+      .update(sha(Data.serialize(new Data.String(payout)))).toString(), 'hex')
+    await this.props.publicAddressStore.getKeys(confirmedPassword)
+    const arrayPromise = mobx.toJS(this.props.publicAddressStore.publicKeys).map(async item => {
+      const { publicKey, path } = item
+      const signature =
+        await this.props.authorizedProtocolStore.signMessage(message, path, confirmedPassword)
+      return [publicKey, new Data.Signature(signature)]
+    })
+    const data = await Promise.all(arrayPromise)
+      .then((signatures) => new Data.Dictionary([[stringPayout, new Data.String(payout)], ['Signature', new Data.Dictionary(signatures)]]))
+      .catch(error => console.log(error))
+    await this.props.runContractStore
+      .run(confirmedPassword, payloadData(contractId, data, stringPayout))
+  }
 
   render() {
     const {

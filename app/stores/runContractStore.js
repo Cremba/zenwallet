@@ -1,6 +1,6 @@
 import { observable, action, runInAction, computed } from 'mobx'
 import _, { isEmpty } from 'lodash'
-import { fromYaml, serialize } from '@zen/zenjs/build/src/Data'
+import { fromYaml, serialize } from '@zen/zenjs'
 
 import { postRunContract } from '../services/api-service'
 import { getNamefromCodeComment } from '../utils/helpers'
