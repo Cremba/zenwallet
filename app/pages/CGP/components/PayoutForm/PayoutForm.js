@@ -7,7 +7,7 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
 import IsValidIcon from '../../../../components/IsValidIcon'
 import PasteButton from '../../../../components/PasteButton'
-import { isValidAddress } from '../../../../utils/helpers'
+import { isValidAddressOrContract } from '../../../../utils/helpers'
 
 import AssetAmountPair from './components/AssetAmountPair'
 
@@ -39,12 +39,12 @@ class PayoutForm extends Component {
 
   get isAddressInvalid() {
     const { address } = this.props.cgpStore
-    return address.length && !isValidAddress(address)
+    return address.length && !isValidAddressOrContract(address)
   }
 
   get isAddressValid() {
     const { address } = this.props.cgpStore
-    return address.length && isValidAddress(address)
+    return address.length && isValidAddressOrContract(address)
   }
 
   renderAddressErrorMessage() {
@@ -80,7 +80,7 @@ class PayoutForm extends Component {
                 value={address}
               />
               <IsValidIcon
-                isValid={isValidAddress(address)}
+                isValid={isValidAddressOrContract(address)}
                 className="input-icon"
                 hasColors
                 isHidden={!address}

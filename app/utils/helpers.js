@@ -59,6 +59,19 @@ export const isValidAddress = (address: ?string, type?: 'contract' | 'pubKey' = 
   }
 }
 
+export const isValidAddressOrContract = (address: ?string): boolean => {
+  try {
+    const { prefix, words } = bech32.decode(address)
+    const pkHash = bech32.fromWords(words.slice(1))
+    const isPrefixValid = (validPrefixes.indexOf(prefix) > -1)
+    return (pkHash.length === 36 || pkHash.length === 32) && isPrefixValid
+  } catch (err) {
+    // uncomment for debugging, this throws many errors from the bech32 package
+    // console.error('validateAddress err', err)
+    return false
+  }
+}
+
 export const isValidHex = (hex: string): boolean => /[0-9a-f]{40}/g.test(hex)
 
 export const hashVoteData = (commitID: string, interval = 1) => Buffer.from(sha

@@ -4,8 +4,7 @@
   background: $dark-grey-2;
   padding: 17px;
   height: 40px;
-  width: 20%;
-  margin: 20px 10px;
+  margin: 20px 20px 20px 0;
 
   .first-input {
     font-size: 14px;
@@ -19,7 +18,7 @@
     color: $light-white;
   }
 
-  div {
-    justify-content: space-between;
+  &::last-child {
+    margin-right: 0;
   }
 }

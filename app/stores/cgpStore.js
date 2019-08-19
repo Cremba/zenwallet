@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-operators */
 // @flow
 import { observable, action, autorun, computed, runInAction } from 'mobx'
 import { Wallet } from '@zen/zenjs'
@@ -24,9 +25,12 @@ class CGPStore {
       }
     })
   }
+
   @observable assetCGP = []
-  @observable intervalLength = 100 // TODO: edit 100 for final release
-  @observable currentInterval = 0
+  @observable cgpCurrentBalance = 0
+  @observable cgpCurrentAllocation = 0
+  @observable prevIntervalTxs = 0
+  @observable prevIntervalZpVotes = 0
   @observable allocation = 0
   @observable allocationZpMin = 0
   @observable allocationZpMax = 50
@@ -36,26 +40,25 @@ class CGPStore {
   @observable inProgressPayout = false
   @observable status = ''
   @observable errorMessage = ''
-  // TODO change contracts
-  @observable contractId =
-    this.networkStore.chain === MAINNET
-      ? 'czen1qqqqqqq8rzylch7w03dmym9zad7vuvs4akp5azdaa6hm7gnc7wk287k9qgs7409ea'
-      : 'ctzn1qqqqqqq8jfkej4gvgr9txgmfuewmy0hm3g4w7zr8e3d34sy8gsuysdfttvvkswr00'
+  contractId = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
 
   calculateAllocationMinMax() {
     // TODO call blockchain/cgp/current and calculate the min/max zp/ratio
     // min and max should be toFixed(3)
   }
+
   getBalanceFor(asset) {
     const result = find(this.assets, { asset })
     return result ? result.balance : 0
   }
+
   @action
   async fetchAssets() {
-    const assets = await getContractBalance(this.networkStore.chain, this.contractId,0,65535)
+    const assets = await getContractBalance(this.networkStore.chain, this.contractId, 0, 65535)
     runInAction(() => this.assetCGP.replace(assets))
   }
 
+  @computed
   get assets() {
     return this.assetCGP.map(asset => ({
       ...asset,
@@ -66,6 +69,7 @@ class CGPStore {
         : numberWithCommas(asset.balance),
     }))
   }
+
   filteredBalances = query => {
     if (!this.assets.length) {
       return []
@@ -73,9 +77,29 @@ class CGPStore {
     if (!query) {
       return this.assets
     }
-    return this.assets.filter(asset => (asset.name.indexOf(query) > -1)
-      || (asset.asset.indexOf(query) > -1))
+    return this.assets.filter(asset => asset.name.indexOf(query) > -1 || asset.asset.indexOf(query) > -1)
   }
+
+  @computed
+  get intervalLength() {
+    return this.networkStore.chain === MAINNET ? 10000 : 100
+  }
+
+  @computed
+  get currentInterval() {
+    return Math.floor((this.networkStore.blocks - 1) / this.intervalLength)
+  }
+
+  @computed
+  get snapshotBlock() {
+    return this.currentInterval * this.intervalLength + this.intervalLength * 0.9
+  }
+
+  @computed
+  get tallyBlock() {
+    return (this.currentInterval + 1) * this.intervalLength
+  }
+
   @computed
   get aggregatedAssetAmounts() {
     return this.assetAmounts.reduce((aggregated, cur) => {

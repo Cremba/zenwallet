@@ -32,6 +32,16 @@ const testnetBlockExplorer = axios.create({
   headers: { 'Access-Control-Allow-Origin': '*' },
 })
 
+export async function getCgp(): Promise {
+  const response = await axios.get(`${getServerAddress()}/blockchain/cgp`)
+  return response.data
+}
+
+export async function getCgpHistory(): Promise {
+  const response = await axios.get(`${getServerAddress()}/blockchain/cgp/history`)
+  return response.data
+}
+
 const getBE = (chain) => (chain === MAINNET ? mainnetBlockExplorer : testnetBlockExplorer)
 
 export async function getCurrentInterval(chain) {
