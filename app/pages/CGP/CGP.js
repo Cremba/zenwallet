@@ -33,6 +33,7 @@ import InfoBoxes from './components/InfoBoxes'
 @observer
 class CGP extends Component {
   componentDidMount() {
+    this.props.cgpStore.resetStatuses()
     this.props.cgpStore
       .fetchAssets()
       .then()

@@ -160,6 +160,12 @@ class CGPStore {
   }
 
   @action
+  resetStatuses() {
+    this.statusAllocation = {}
+    this.statusPayout = {}
+  }
+
+  @action
   resetPayout() {
     this.address = ''
     this.assetAmounts = [{ asset: '', amount: 0 }]
@@ -202,72 +208,96 @@ class CGPStore {
   @action
   submitAllocationVote = async (confirmedPassword: string) => {
     if (this.allocationValid) {
-      this.inProgressAllocation = true
-      const stringAllocation = 'Allocation'
-      const all = serialize(new Allocation(convertAllocation(this.allocation)))
-      const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-      const message = Hash.compute(interval.toString().concat(all)).bytes
-      await this.publicAddressStore.getKeys(confirmedPassword)
-      const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
-        const { publicKey, path } = item
-        const signature = await this.authorizedProtocolStore.signMessage(
-          message,
-          path,
+      try {
+        this.inProgressAllocation = true
+        const stringAllocation = 'Allocation'
+        const all = serialize(new Allocation(convertAllocation(this.allocation)))
+        const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
+        const message = Hash.compute(interval.toString().concat(all)).bytes
+        await this.publicAddressStore.getKeys(confirmedPassword)
+        const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
+          const { publicKey, path } = item
+          const signature = await this.authorizedProtocolStore.signMessage(
+            message,
+            path,
+            confirmedPassword,
+          )
+          return [publicKey, new Data.Signature(signature)]
+        })
+        const data = await Promise.all(arrayPromise)
+          .then(signatures =>
+            new Data.Dictionary([
+              [stringAllocation, new Data.String(all)],
+              ['Signature', new Data.Dictionary(signatures)],
+            ]))
+          .catch(error => console.log(error))
+        await this.runContractStore.run(
           confirmedPassword,
+          payloadData(this.contractId, data, stringAllocation),
         )
-        return [publicKey, new Data.Signature(signature)]
+        runInAction(() => {
+          this.statusAllocation = { status: 'success' }
+        })
+      } catch (error) {
+        runInAction(() => {
+          this.statusAllocation = { status: 'error', errorMessage: error.message }
+        })
+      }
+
+      runInAction(() => {
+        this.inProgressAllocation = false
       })
-      const data = await Promise.all(arrayPromise)
-        .then(signatures =>
-          new Data.Dictionary([
-            [stringAllocation, new Data.String(all)],
-            ['Signature', new Data.Dictionary(signatures)],
-          ]))
-        .catch(error => console.log(error))
-      await this.runContractStore.run(
-        confirmedPassword,
-        payloadData(this.contractId, data, stringAllocation),
-      )
-      this.inProgressAllocation = false
     }
   }
 
   @action
   submitPayoutVote = async (confirmedPassword: string) => {
     if (this.payoutValid) {
-      this.inProgressPayout = true
-      const stringPayout = 'Payout'
-      const payout = serialize(new Payout(
-        {
-          kind: 'PKRecipient',
-          address: this.address,
-        },
-        this.assetAmounts,
-      ))
-      const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-      const message = Hash.compute(interval.toString().concat(payout)).bytes
-      await this.publicAddressStore.getKeys(confirmedPassword)
-      const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
-        const { publicKey, path } = item
-        const signature = await this.authorizedProtocolStore.signMessage(
-          message,
-          path,
+      try {
+        this.inProgressPayout = true
+        const stringPayout = 'Payout'
+        const payout = serialize(new Payout(
+          {
+            kind: 'PKRecipient',
+            address: this.address,
+          },
+          this.assetAmounts,
+        ))
+        const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
+        const message = Hash.compute(interval.toString().concat(payout)).bytes
+        await this.publicAddressStore.getKeys(confirmedPassword)
+        const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
+          const { publicKey, path } = item
+          const signature = await this.authorizedProtocolStore.signMessage(
+            message,
+            path,
+            confirmedPassword,
+          )
+          return [publicKey, new Data.Signature(signature)]
+        })
+        const data = await Promise.all(arrayPromise)
+          .then(signatures =>
+            new Data.Dictionary([
+              [stringPayout, new Data.String(payout)],
+              ['Signature', new Data.Dictionary(signatures)],
+            ]))
+          .catch(error => console.log(error))
+        await this.runContractStore.run(
           confirmedPassword,
+          payloadData(this.contractId, data, stringPayout),
         )
-        return [publicKey, new Data.Signature(signature)]
+        runInAction(() => {
+          this.statusPayout = { status: 'success' }
+        })
+      } catch (error) {
+        runInAction(() => {
+          this.statusPayout = { status: 'error', errorMessage: error.message }
+        })
+      }
+
+      runInAction(() => {
+        this.inProgressPayout = false
       })
-      const data = await Promise.all(arrayPromise)
-        .then(signatures =>
-          new Data.Dictionary([
-            [stringPayout, new Data.String(payout)],
-            ['Signature', new Data.Dictionary(signatures)],
-          ]))
-        .catch(error => console.log(error))
-      await this.runContractStore.run(
-        confirmedPassword,
-        payloadData(this.contractId, data, stringPayout),
-      )
-      this.inProgressAllocation = false
     }
   }
 }
