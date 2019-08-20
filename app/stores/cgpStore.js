@@ -8,9 +8,14 @@ import { Data } from '@zen/zenjs'
 import { Hash } from '@zen/zenjs/build/src/Consensus/Types/Hash'
 import { Allocation, Payout } from '@zen/zenjs/build/src/Consensus/Types/VoteData'
 
-
 import { MAINNET } from '../constants/constants'
-import { isValidAddress, numberWithCommas, payloadData, convertAllocation, serialize } from '../utils/helpers'
+import {
+  isValidAddress,
+  numberWithCommas,
+  payloadData,
+  convertAllocation,
+  serialize,
+} from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
 import { getContractBalance } from '../services/api-service'
 
@@ -83,7 +88,8 @@ class CGPStore {
     if (!query) {
       return this.assets
     }
-    return this.assets.filter(asset => asset.name.indexOf(query) > -1 || asset.asset.indexOf(query) > -1)
+    return this.assets
+      .filter(asset => asset.name.indexOf(query) > -1 || asset.asset.indexOf(query) > -1)
   }
 
   @computed
@@ -112,8 +118,7 @@ class CGPStore {
       if (typeof aggregated[cur.asset] === 'undefined') {
         aggregated[cur.asset] = 0
       }
-      aggregated[cur.asset] = Decimal.add(aggregated[cur.asset], cur.amount)
-        .toNumber()
+      aggregated[cur.asset] = Decimal.add(aggregated[cur.asset], cur.amount).toNumber()
       return aggregated
     }, {})
   }
@@ -142,16 +147,14 @@ class CGPStore {
 
   @computed
   get payoutValid() {
-    const allAmountsNotExceedingBalance = keys(this.aggregatedAssetAmounts)
-      .reduce(
-        (valid, asset) =>
-          Decimal.sub(
-            this.portfolioStore.getBalanceFor(asset),
-            this.aggregatedAssetAmounts[asset],
-          )
-            .greaterThanOrEqualTo(0),
-        true,
-      )
+    const allAmountsNotExceedingBalance = keys(this.aggregatedAssetAmounts).reduce(
+      (valid, asset) =>
+        Decimal.sub(
+          this.portfolioStore.getBalanceFor(asset),
+          this.aggregatedAssetAmounts[asset],
+        ).greaterThanOrEqualTo(0),
+      true,
+    )
 
     return isValidAddress(this.address) && this.assetAmountsValid && allAmountsNotExceedingBalance
   }
@@ -203,51 +206,67 @@ class CGPStore {
       const stringAllocation = 'Allocation'
       const all = serialize(new Allocation(convertAllocation(this.allocation)))
       const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-      const message = Hash.compute(interval.toString()
-        .concat(all)).bytes
+      const message = Hash.compute(interval.toString().concat(all)).bytes
       await this.publicAddressStore.getKeys(confirmedPassword)
-      const arrayPromise = toJS(this.publicAddressStore.publicKeys)
-        .map(async item => {
-          const { publicKey, path } = item
-          const signature =
-            await this.authorizedProtocolStore.signMessage(message, path, confirmedPassword)
-          return [publicKey, new Data.Signature(signature)]
-        })
+      const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
+        const { publicKey, path } = item
+        const signature = await this.authorizedProtocolStore.signMessage(
+          message,
+          path,
+          confirmedPassword,
+        )
+        return [publicKey, new Data.Signature(signature)]
+      })
       const data = await Promise.all(arrayPromise)
-        .then((signatures) => new Data.Dictionary([[stringAllocation, new Data.String(all)], ['Signature', new Data.Dictionary(signatures)]]))
+        .then(signatures =>
+          new Data.Dictionary([
+            [stringAllocation, new Data.String(all)],
+            ['Signature', new Data.Dictionary(signatures)],
+          ]))
         .catch(error => console.log(error))
-      await this.runContractStore
-        .run(confirmedPassword, payloadData(this.contractId, data, stringAllocation))
+      await this.runContractStore.run(
+        confirmedPassword,
+        payloadData(this.contractId, data, stringAllocation),
+      )
       this.inProgressAllocation = false
     }
   }
-
 
   @action
   submitPayoutVote = async (confirmedPassword: string) => {
     if (this.payoutValid) {
       this.inProgressPayout = true
       const stringPayout = 'Payout'
-      const payout = serialize(new Payout({
-        kind: 'PKRecipient',
-        address: this.address,
-      }, this.assetAmounts))
+      const payout = serialize(new Payout(
+        {
+          kind: 'PKRecipient',
+          address: this.address,
+        },
+        this.assetAmounts,
+      ))
       const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-      const message = Hash.compute(interval.toString()
-        .concat(payout)).bytes
+      const message = Hash.compute(interval.toString().concat(payout)).bytes
       await this.publicAddressStore.getKeys(confirmedPassword)
-      const arrayPromise = toJS(this.publicAddressStore.publicKeys)
-        .map(async item => {
-          const { publicKey, path } = item
-          const signature =
-            await this.authorizedProtocolStore.signMessage(message, path, confirmedPassword)
-          return [publicKey, new Data.Signature(signature)]
-        })
+      const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
+        const { publicKey, path } = item
+        const signature = await this.authorizedProtocolStore.signMessage(
+          message,
+          path,
+          confirmedPassword,
+        )
+        return [publicKey, new Data.Signature(signature)]
+      })
       const data = await Promise.all(arrayPromise)
-        .then((signatures) => new Data.Dictionary([[stringPayout, new Data.String(payout)], ['Signature', new Data.Dictionary(signatures)]]))
+        .then(signatures =>
+          new Data.Dictionary([
+            [stringPayout, new Data.String(payout)],
+            ['Signature', new Data.Dictionary(signatures)],
+          ]))
         .catch(error => console.log(error))
-      await this.runContractStore
-        .run(confirmedPassword, payloadData(this.contractId, data, stringPayout))
+      await this.runContractStore.run(
+        confirmedPassword,
+        payloadData(this.contractId, data, stringPayout),
+      )
       this.inProgressAllocation = false
     }
   }

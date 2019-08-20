@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Flexbox from 'flexbox-react'
 import PropTypes from 'prop-types'
 
 import AutoSuggestAssets from '../../../../../components/AutoSuggestAssets'
@@ -61,9 +60,15 @@ AssetAmountPair.propTypes = {
   asset: PropTypes.string,
   assetBalance: PropTypes.number,
   amount: PropTypes.number,
-  amountDisplay: PropTypes.string,
-  onChange: PropTypes.func,
+  onChange: PropTypes.func.isRequired,
   showLabels: PropTypes.bool,
+}
+
+AssetAmountPair.defaultProps = {
+  asset: '',
+  assetBalance: 0,
+  amount: 0,
+  showLabels: true,
 }
 
 export default AssetAmountPair

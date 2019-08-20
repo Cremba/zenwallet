@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react'
 import InputRange from 'react-input-range'
 import Flexbox from 'flexbox-react'
