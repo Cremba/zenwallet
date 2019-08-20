@@ -7,6 +7,8 @@ import BigInteger from 'bigi'
 import { Data } from '@zen/zenjs'
 import { Hash } from '@zen/zenjs/build/src/Consensus/Types/Hash'
 import { Allocation, Payout } from '@zen/zenjs/build/src/Consensus/Types/VoteData'
+import { ContractId } from '@zen/zenjs/build/src/Consensus/Types/ContractId'
+import Address from '@zen/zenjs/build/src/Components/Wallet/Address'
 
 import { MAINNET } from '../constants/constants'
 import {
@@ -52,7 +54,9 @@ class CGPStore {
   @observable inProgressPayout = false
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
-  contractId = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
+  contractId = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
+  @observable addressCGP =
+    Address.getPublicKeyHashAddress(this.networkStore.chainUnformatted, ContractId.fromString(this.contractId))
 
 
   calculateAllocationMinMax() {
@@ -82,7 +86,7 @@ class CGPStore {
 
   @action
   async fetchAssets() {
-    const assets = await getContractBalance(this.networkStore.chain, this.contractId, 0, 65535)
+    const assets = await getContractBalance(this.networkStore.chain, this.addressCGP, 0, 65535)
     runInAction(() => this.assetCGP.replace(assets))
   }
 
