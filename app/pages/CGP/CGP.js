@@ -26,21 +26,30 @@ import BoxLabel from '../../components/BoxLabel'
 // import Loading from '../../components/Loading'
 // import IsValidIcon from '../../components/IsValidIcon'
 import ProtectedButton from '../../components/Buttons'
-// import FormResponseMessage from '../../components/FormResponseMessage'
+import FormResponseMessage from '../../components/FormResponseMessage'
 // import ExternalLink from '../../components/ExternalLink'
 // import { kalapasToZen } from '../../utils/zenUtils'
 import { payloadData, convertAllocation, serialize } from '../../utils/helpers'
-
 
 import AllocationForm from './components/AllocationForm'
 import PayoutForm from './components/PayoutForm'
 import InfoBoxes from './components/InfoBoxes'
 
-@inject('cgpStore', 'publicAddressStore', 'portfolioStore', 'networkStore', 'runContractStore', 'authorizedProtocolStore')
+@inject(
+  'cgpStore',
+  'publicAddressStore',
+  'portfolioStore',
+  'networkStore',
+  'runContractStore',
+  'authorizedProtocolStore',
+)
 @observer
 class CGP extends Component {
   componentDidMount() {
-    this.props.cgpStore.fetchAssets().then().catch()
+    this.props.cgpStore
+      .fetchAssets()
+      .then()
+      .catch()
   }
 
   resetPayoutForm = () => this.props.cgpStore.resetPayout()
@@ -100,6 +109,34 @@ class CGP extends Component {
       .run(confirmedPassword, payloadData(contractId, data, stringPayout))
   }
 
+  renderAllocationErrorResponse() {
+    const {
+      statusAllocation: { status, errorMessage },
+    } = this.props.cgpStore
+    return <ErrorResponse type="allocation" hide={status !== 'error'} errorMessage={errorMessage} />
+  }
+
+  renderPayoutErrorResponse() {
+    const {
+      statusPayout: { status, errorMessage },
+    } = this.props.cgpStore
+    return <ErrorResponse type="payout" hide={status !== 'error'} errorMessage={errorMessage} />
+  }
+
+  renderAllocationSuccessResponse() {
+    const {
+      statusAllocation: { status },
+    } = this.props.cgpStore
+    return <SuccessResponse type="Allocation" hide={status !== 'success'} />
+  }
+
+  renderPayoutSuccessResponse() {
+    const {
+      statusPayout: { status },
+    } = this.props.cgpStore
+    return <SuccessResponse type="Payout" hide={status !== 'success'} />
+  }
+
   render() {
     const {
       cgpStore: {
@@ -151,11 +188,13 @@ class CGP extends Component {
                 <Flexbox className="section-title">
                   <h1>CGP Allocation</h1>
                 </Flexbox>
-                <Flexbox flexDirection="column" className="form-container">
+                <Flexbox flexDirection="column" className="form-container allocation">
                   <Flexbox className="form-row" />
                   <AllocationForm />
                 </Flexbox>
                 <Flexbox justifyContent="space-between" flexDirection="row">
+                  {this.renderAllocationErrorResponse()}
+                  {this.renderAllocationSuccessResponse()}
                   <Flexbox flexGrow={2} />
                   <ProtectedButton
                     className={cx('button-on-right', { loading: inProgressAllocation })}
@@ -176,10 +215,8 @@ class CGP extends Component {
                 </Flexbox>
 
                 <Flexbox justifyContent="space-between" flexDirection="row">
-                  {/* {this.renderSuccessResponse()}
-            {this.renderErrorResponse()}
-            {this.renderIntervalEnded()}
-            {this.renderBeforeSnapshot()} */}
+                  {this.renderPayoutErrorResponse()}
+                  {this.renderPayoutSuccessResponse()}
                   <Flexbox flexGrow={2} />
                   <button
                     className={cx('button-on-right', 'secondary')}
@@ -206,3 +243,33 @@ class CGP extends Component {
 }
 
 export default CGP
+
+function ErrorResponse({ type, hide, errorMessage }) {
+  if (hide) {
+    return null
+  }
+  return (
+    <FormResponseMessage className="error">
+      <span>There was a problem with the {type} vote.</span>
+      <span className="devider" />
+      <p>Error message: {errorMessage}</p>
+    </FormResponseMessage>
+  )
+}
+
+function SuccessResponse({ type, hide, message }) {
+  if (hide) {
+    return null
+  }
+  return (
+    <FormResponseMessage className="success">
+      <span>{type} vote was successfully broadcasted</span>
+      {message && (
+        <React.Fragment>
+          <span className="devider" />
+          <p>{message}</p>
+        </React.Fragment>
+      )}
+    </FormResponseMessage>
+  )
+}

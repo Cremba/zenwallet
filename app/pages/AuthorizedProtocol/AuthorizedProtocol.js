@@ -55,6 +55,7 @@ class AuthorizedProtocol extends Component<Props, State> {
     zeroBalance: undefined,
   }
   componentDidMount() {
+    // BUG: this promise should be canceled if the component is unmounted
     this.props.authorizedProtocolStore.getVote()
       .then(bool => this.setState({ hasVoted: bool }))
       .catch(error => console.error(error))

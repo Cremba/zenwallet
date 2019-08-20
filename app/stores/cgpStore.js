@@ -38,8 +38,8 @@ class CGPStore {
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable inProgressAllocation = false
   @observable inProgressPayout = false
-  @observable status = ''
-  @observable errorMessage = ''
+  @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
+  @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
   contractId = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
 
   calculateAllocationMinMax() {
@@ -151,8 +151,8 @@ class CGPStore {
   resetPayout() {
     this.address = ''
     this.assetAmounts = [{ asset: '', amount: 0 }]
-    this.status = ''
-    this.errorMessage = ''
+    this.statusAllocation = {}
+    this.statusPayout = {}
   }
 
   @action

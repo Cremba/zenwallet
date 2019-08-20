@@ -21,6 +21,10 @@
     margin-right: 20px;
   }
 
+  .form-container.allocation {
+    overflow: hidden;
+  }
+
   .allocation-form {
     padding-top: 22px;
 
@@ -34,10 +38,15 @@
       }
       .input-range__label-container {
         left: 0;
+
+        .value.above-middle {
+          position: relative;
+          left: -100%;
+        }
       }
     }
-
   }
+
   .remove-container {
     label {
       display: block;
