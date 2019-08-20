@@ -10,6 +10,7 @@ import QRCode from 'qrcode.react'
 
 import SendTxStore from '../../stores/sendTxStore'
 import PortfolioStore from '../../stores/portfolioStore'
+import NetworkStore from '../../stores/networkStore'
 import { isValidAddress } from '../../utils/helpers'
 import { ref } from '../../utils/domUtils'
 import { isZenAsset } from '../../utils/zenUtils'
@@ -27,14 +28,15 @@ import Copy from '../../components/Copy'
 
 type Props = {
   sendTxStore: SendTxStore,
-  portfolioStore: PortfolioStore
+  portfolioStore: PortfolioStore,
+  networkStore: NetworkStore
 };
 
 type State = {
   isOfflineSent: boolean
 };
 
-@inject('portfolioStore', 'sendTxStore')
+@inject('portfolioStore', 'sendTxStore', 'networkStore')
 @observer
 class SendTx extends Component<Props, State> {
   state = {
@@ -42,6 +44,7 @@ class SendTx extends Component<Props, State> {
   }
   componentDidMount() {
     this.props.portfolioStore.fetch()
+    this.props.networkStore.fetch()
   }
 
   onToChanged = (evt: SyntheticEvent<HTMLInputElement>) => {
@@ -68,7 +71,7 @@ class SendTx extends Component<Props, State> {
 
   get isToInvalid() {
     const { to } = this.props.sendTxStore
-    return to.length && !isValidAddress(to)
+    return to.length && !isValidAddress(to, this.props.networkStore.chainUnformatted)
   }
 
   renderAddressErrorMessage() {
@@ -168,7 +171,7 @@ class SendTx extends Component<Props, State> {
 
   get isToValid() {
     const { to } = this.props.sendTxStore
-    return (to.length > 0) && isValidAddress(to)
+    return (to.length > 0) && isValidAddress(to, this.props.networkStore.chainUnformatted)
   }
 
   get areAllFieldsValid() {
@@ -217,7 +220,7 @@ class SendTx extends Component<Props, State> {
                     autoFocus
                   />
                   <IsValidIcon
-                    isValid={isValidAddress(to)}
+                    isValid={isValidAddress(to, this.props.networkStore.chainUnformatted)}
                     className="input-icon"
                     hasColors
                     isHidden={!to}

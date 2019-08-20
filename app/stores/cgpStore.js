@@ -173,7 +173,8 @@ class CGPStore {
       true,
     )
 
-    return isValidAddress(this.address) && this.assetAmountsValid && allAmountsNotExceedingBalance
+    return isValidAddress(this.address, this.networkStore.chain)
+      && this.assetAmountsValid && allAmountsNotExceedingBalance
   }
 
   @action

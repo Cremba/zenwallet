@@ -3,7 +3,7 @@
 import { Buffer } from 'buffer'
 
 import bech32 from 'bech32'
-import { Data } from '@zen/zenjs'
+import { Data, Address, Chain } from '@zen/zenjs'
 import { sha3_256 as sha } from 'js-sha3'
 import BigInteger from 'bigi'
 
@@ -44,14 +44,10 @@ export const serialize = (data) => {
 
 export const stringToNumber = (str: ?string) => str && parseFloat(str.replace(/,/g, ''))
 
-export const isValidAddress = (address: ?string, type?: 'contract' | 'pubKey' = 'pubKey'): boolean => {
+export const isValidAddress = (address: ?string, chain?: Chain = 'test'): boolean => {
   try {
-    const { prefix, words } = bech32.decode(address)
-    const pkHash = bech32.fromWords(words.slice(1))
-    const isPrefixValid = (validPrefixes.indexOf(prefix) > -1)
-    return type === 'contract'
-      ? pkHash.length === 36 && isPrefixValid
-      : pkHash.length === 32 && isPrefixValid
+    Address.decode(chain, address)
+    return true
   } catch (err) {
     // uncomment for debugging, this throws many errors from the bech32 package
     // console.error('validateAddress err', err)
