@@ -30,7 +30,15 @@ const runContractStore = new RunContractStore(activeContractsStore)
 const blockchainLogsStore = new Store()
 const authorizedProtocolStore =
   new AuthorizedProtocolStore(publicAddressStore, networkStore, txHistoryStore)
-const cgpStore = new CGPStore(publicAddressStore, networkStore, txHistoryStore, portfolioStore)
+const cgpStore =
+  new CGPStore(
+    publicAddressStore,
+    networkStore,
+    txHistoryStore,
+    portfolioStore,
+    authorizedProtocolStore,
+    runContractStore,
+  )
 
 export default {
   portfolioStore,

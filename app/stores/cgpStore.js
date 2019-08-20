@@ -1,21 +1,27 @@
 /* eslint-disable no-mixed-operators */
 // @flow
-import { observable, action, autorun, computed, runInAction } from 'mobx'
-import { Wallet } from '@zen/zenjs'
+import { observable, action, autorun, computed, runInAction, toJS } from 'mobx'
 import { last, findIndex, keys, find } from 'lodash'
 import { Decimal } from 'decimal.js'
+import BigInteger from 'bigi'
+import { Data } from '@zen/zenjs'
+import { Hash } from '@zen/zenjs/build/src/Consensus/Types/Hash'
+import { Allocation, Payout } from '@zen/zenjs/build/src/Consensus/Types/VoteData'
+
 
 import { MAINNET } from '../constants/constants'
-import { isValidAddress, numberWithCommas } from '../utils/helpers'
+import { isValidAddress, numberWithCommas, payloadData, convertAllocation, serialize } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
 import { getContractBalance } from '../services/api-service'
 
 class CGPStore {
-  constructor(publicAddressStore, networkStore, txHistoryStore, portfolioStore) {
-    this.publicAddressStore = publicAddressStore
+  constructor(publicStore, networkStore, txHistoryStore, portfolioStore, authStore, runStore) {
+    this.publicAddressStore = publicStore
     this.portfolioStore = portfolioStore
     this.networkStore = networkStore
     this.txHistoryStore = txHistoryStore
+    this.authorizedProtocolStore = authStore
+    this.runContractStore = runStore
 
     autorun(() => {
       // calculate the min max based on the current block
@@ -106,7 +112,8 @@ class CGPStore {
       if (typeof aggregated[cur.asset] === 'undefined') {
         aggregated[cur.asset] = 0
       }
-      aggregated[cur.asset] = Decimal.add(aggregated[cur.asset], cur.amount).toNumber()
+      aggregated[cur.asset] = Decimal.add(aggregated[cur.asset], cur.amount)
+        .toNumber()
       return aggregated
     }, {})
   }
@@ -135,14 +142,16 @@ class CGPStore {
 
   @computed
   get payoutValid() {
-    const allAmountsNotExceedingBalance = keys(this.aggregatedAssetAmounts).reduce(
-      (valid, asset) =>
-        Decimal.sub(
-          this.portfolioStore.getBalanceFor(asset),
-          this.aggregatedAssetAmounts[asset],
-        ).greaterThanOrEqualTo(0),
-      true,
-    )
+    const allAmountsNotExceedingBalance = keys(this.aggregatedAssetAmounts)
+      .reduce(
+        (valid, asset) =>
+          Decimal.sub(
+            this.portfolioStore.getBalanceFor(asset),
+            this.aggregatedAssetAmounts[asset],
+          )
+            .greaterThanOrEqualTo(0),
+        true,
+      )
 
     return isValidAddress(this.address) && this.assetAmountsValid && allAmountsNotExceedingBalance
   }
@@ -188,18 +197,58 @@ class CGPStore {
   }
 
   @action
-  submitAllocationVote() {
+  submitAllocationVote = async (confirmedPassword: string) => {
     if (this.allocationValid) {
       this.inProgressAllocation = true
-      // TODO actually create the vote!
+      const stringAllocation = 'Allocation'
+      const all = serialize(new Allocation(convertAllocation(this.allocation)))
+      const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
+      const message = Hash.compute(interval.toString()
+        .concat(all)).bytes
+      await this.publicAddressStore.getKeys(confirmedPassword)
+      const arrayPromise = toJS(this.publicAddressStore.publicKeys)
+        .map(async item => {
+          const { publicKey, path } = item
+          const signature =
+            await this.authorizedProtocolStore.signMessage(message, path, confirmedPassword)
+          return [publicKey, new Data.Signature(signature)]
+        })
+      const data = await Promise.all(arrayPromise)
+        .then((signatures) => new Data.Dictionary([[stringAllocation, new Data.String(all)], ['Signature', new Data.Dictionary(signatures)]]))
+        .catch(error => console.log(error))
+      await this.runContractStore
+        .run(confirmedPassword, payloadData(this.contractId, data, stringAllocation))
+      this.inProgressAllocation = false
     }
   }
 
+
   @action
-  submitPayoutVote() {
+  submitPayoutVote = async (confirmedPassword: string) => {
     if (this.payoutValid) {
       this.inProgressPayout = true
-      // TODO actually create the vote!
+      const stringPayout = 'Payout'
+      const payout = serialize(new Payout({
+        kind: 'PKRecipient',
+        address: this.address,
+      }, this.assetAmounts))
+      const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
+      const message = Hash.compute(interval.toString()
+        .concat(payout)).bytes
+      await this.publicAddressStore.getKeys(confirmedPassword)
+      const arrayPromise = toJS(this.publicAddressStore.publicKeys)
+        .map(async item => {
+          const { publicKey, path } = item
+          const signature =
+            await this.authorizedProtocolStore.signMessage(message, path, confirmedPassword)
+          return [publicKey, new Data.Signature(signature)]
+        })
+      const data = await Promise.all(arrayPromise)
+        .then((signatures) => new Data.Dictionary([[stringPayout, new Data.String(payout)], ['Signature', new Data.Dictionary(signatures)]]))
+        .catch(error => console.log(error))
+      await this.runContractStore
+        .run(confirmedPassword, payloadData(this.contractId, data, stringPayout))
+      this.inProgressAllocation = false
     }
   }
 }
