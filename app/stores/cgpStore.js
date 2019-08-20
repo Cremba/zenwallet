@@ -17,7 +17,7 @@ import {
   serialize,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
-import { getContractBalance } from '../services/api-service'
+import { getContractBalance, getCgp, getCgpHistory } from '../services/api-service'
 
 class CGPStore {
   constructor(publicStore, networkStore, txHistoryStore, portfolioStore, authStore, runStore) {
@@ -40,6 +40,7 @@ class CGPStore {
   @observable assetCGP = []
   @observable cgpCurrentBalance = 0
   @observable cgpCurrentAllocation = 0
+  @observable cgpCurrentPayout = 0
   @observable prevIntervalTxs = 0
   @observable prevIntervalZpVotes = 0
   @observable allocation = 0
@@ -53,6 +54,7 @@ class CGPStore {
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
   contractId = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
 
+
   calculateAllocationMinMax() {
     // TODO call blockchain/cgp/current and calculate the min/max zp/ratio
     // min and max should be toFixed(3)
@@ -61,6 +63,21 @@ class CGPStore {
   getBalanceFor(asset) {
     const result = find(this.assets, { asset })
     return result ? result.balance : 0
+  }
+
+  @action
+  async fetch() {
+    return Promise.all([this.fetchCgp(), this.fetchAssets()])
+  }
+
+  @action
+  async fetchCgp() {
+    const [cgpCurrent, cgpHistory] = await Promise.all([getCgp(), getCgpHistory()])
+    runInAction(() => {
+      this.cgpCurrentAllocation = cgpCurrent.allocation
+      this.cgpCurrentPayout = cgpCurrent.payout
+      // todo get info from cgpHistory
+    })
   }
 
   @action
@@ -169,7 +186,6 @@ class CGPStore {
   resetPayout() {
     this.address = ''
     this.assetAmounts = [{ asset: '', amount: 0 }]
-    this.statusAllocation = {}
     this.statusPayout = {}
   }
 

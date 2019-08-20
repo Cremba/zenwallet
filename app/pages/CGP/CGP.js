@@ -35,7 +35,7 @@ class CGP extends Component {
   componentDidMount() {
     this.props.cgpStore.resetStatuses()
     this.props.cgpStore
-      .fetchAssets()
+      .fetch()
       .then()
       .catch()
   }
