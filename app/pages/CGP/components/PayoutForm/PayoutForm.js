@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+// @flow
 import React, { Component } from 'react'
 import Flexbox from 'flexbox-react'
 import { inject, observer } from 'mobx-react'
@@ -22,6 +23,12 @@ class PayoutForm extends Component {
   onAddressPasteClicked = (clipboardContents: string) => {
     this.props.cgpStore.updateAddress(clipboardContents)
   }
+
+  onBallotIdPasteClicked = (clipboardContents: string) => {
+    this.props.cgpStore.updateBallotId(clipboardContents)
+  }
+
+  ballotChangeHandler = e => this.props.cgpStore.updateBallotId(e.currentTarget.value.trim())
 
   assetAmountChangeHandler = (data, index) => {
     this.props.cgpStore.changeAssetAmountPair({
@@ -58,13 +65,53 @@ class PayoutForm extends Component {
     }
   }
 
+  renderBallotIdErrorMessage() {
+    const { ballotId, ballotIdValid } = this.props.cgpStore
+    if (ballotId && !ballotIdValid) {
+      return (
+        <div className="error input-message">
+          <FontAwesomeIcon icon={['far', 'exclamation-circle']} />
+          <span>Ballot ID is invalid</span>
+        </div>
+      )
+    }
+  }
+
   render() {
     const {
-      cgpStore: { assetAmounts, address },
+      cgpStore: {
+        assetAmounts, address, ballotId, ballotIdValid,
+      },
       cgpStore,
     } = this.props
     return (
       <Flexbox flexDirection="column">
+        <Flexbox flexDirection="column" className="destination-address-input form-row">
+          <label htmlFor="ballotId">Ballot ID</label>
+          <Flexbox flexDirection="row">
+            <Flexbox flexDirection="column" className="full-width relative">
+              <input
+                id="ballotId"
+                name="ballotId"
+                type="text"
+                placeholder="Enter a ballot ID"
+                className={cx({ 'is-valid': ballotIdValid, error: ballotId && !ballotIdValid })}
+                autoFocus
+                onChange={this.ballotChangeHandler}
+                value={ballotId}
+              />
+              <IsValidIcon
+                isValid={ballotIdValid}
+                className="input-icon"
+                hasColors
+                isHidden={!ballotId}
+              />
+              {this.renderBallotIdErrorMessage()}
+            </Flexbox>
+            <PasteButton className="button-on-right" onClick={this.onBallotIdPasteClicked} />
+          </Flexbox>
+        </Flexbox>
+        <OrSeparator />
         <Flexbox flexDirection="column" className="destination-address-input form-row">
           <label htmlFor="address">Address</label>
           <Flexbox flexDirection="row" className="destination-address-input">
@@ -136,3 +183,13 @@ class PayoutForm extends Component {
 }
 
 export default PayoutForm
+
+function OrSeparator() {
+  return (
+    <Flexbox alignItems="center">
+      <div className="devider" />
+      <div>OR</div>
+      <div className="devider" />
+    </Flexbox>
+  )
+}
