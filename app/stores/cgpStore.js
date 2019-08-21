@@ -1,7 +1,7 @@
 /* eslint-disable no-mixed-operators */
 // @flow
-import { observable, action, autorun, computed, runInAction, toJS } from 'mobx'
-import { last, findIndex, keys, find } from 'lodash'
+import { observable, action, autorun, reaction, computed, runInAction, toJS } from 'mobx'
+import { last, findIndex, keys, find, isEqual } from 'lodash'
 import { Decimal } from 'decimal.js'
 import BigInteger from 'bigi'
 import { Data } from '@zen/zenjs'
@@ -19,7 +19,7 @@ import {
   serialize,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
-import { getContractBalance, getCgp, getCgpHistory } from '../services/api-service'
+import { getContractBalance, getCgp } from '../services/api-service'
 
 class CGPStore {
   constructor(publicStore, networkStore, txHistoryStore, portfolioStore, authStore, runStore) {
@@ -37,6 +37,20 @@ class CGPStore {
         this.calculateAllocationMinMax()
       }
     })
+
+    autorun(() => {
+      if (this.ballotId) {
+        this.deserializeBallotIdOnChange()
+      }
+    })
+
+    // reaction ensures running only on the right change
+    reaction(
+      () =>
+        !isEqual(this.address, this.ballotDeserialized.address) ||
+        !isEqual(this.assetAmounts, this.ballotDeserialized.spends),
+      () => this.removeBallotIdOnDetailsChange(),
+    )
   }
 
   @observable assetCGP = []
@@ -48,6 +62,29 @@ class CGPStore {
   @observable allocation = 0
   @observable allocationZpMin = 0
   @observable allocationZpMax = 50
+  @observable ballotId = ''
+  @observable ballotDeserialized = {}
+  @observable ballotIdValid = false
+  // TODO DEMO - replace with real data
+  @observable popularBallots = [
+    { id: '123456789', zpVoted: 50 },
+    { id: 'fliocshdicsh', zpVoted: 50 },
+    { id: 'shdjsdj', zpVoted: 50 },
+    { id: 'wiuoiwuroewuroiew', zpVoted: 50 },
+    { id: 'ldkfjlsdkfsjd', zpVoted: 50 },
+    { id: 'eueeeeeeeeeeee', zpVoted: 50 },
+    { id: '0000000000000000', zpVoted: 50 },
+    { id: 'lllllllllllllllll', zpVoted: 50 },
+    { id: 'saruiureiwiruiwuiri', zpVoted: 50 },
+    { id: 'popopopoopopo', zpVoted: 50 },
+    { id: '22222222333333333333', zpVoted: 50 },
+    { id: 'llllllllllll', zpVoted: 50 },
+    { id: 'xlsdosddsfoid', zpVoted: 50 },
+    { id: 'pqpqpqpqwq', zpVoted: 50 },
+    { id: 'd9dfeif9eeefe', zpVoted: 50 },
+    { id: 'lkdsuiuouo', zpVoted: 50 },
+    { id: 'iueiwuieuwiueiwuieuiwuieiwiwueiuwiueiw', zpVoted: 50 },
+  ]
   @observable address = ''
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable inProgressAllocation = false
@@ -57,7 +94,6 @@ class CGPStore {
   contractId = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
   @observable addressCGP =
     Address.getPublicKeyHashAddress(this.networkStore.chainUnformatted, ContractId.fromString(this.contractId))
-
 
   calculateAllocationMinMax() {
     // TODO call blockchain/cgp/current and calculate the min/max zp/ratio
@@ -76,7 +112,9 @@ class CGPStore {
 
   @action
   async fetchCgp() {
-    const [cgpCurrent, cgpHistory] = await Promise.all([getCgp(), getCgpHistory()])
+    // TODO - get history too
+    // const [cgpCurrent, cgpHistory] = await Promise.all([getCgp(), getCgpHistory()])
+    const cgpCurrent = await getCgp()
     runInAction(() => {
       this.cgpCurrentAllocation = cgpCurrent.allocation
       this.cgpCurrentPayout = cgpCurrent.payout
@@ -202,6 +240,45 @@ class CGPStore {
   @action
   updateAddress(value) {
     this.address = value
+  }
+
+  @action
+  updateBallotId(value) {
+    this.ballotId = value
+  }
+
+  removeBallotIdOnDetailsChange() {
+    if (
+      !isEqual(this.address, this.ballotDeserialized.address) ||
+      !isEqual(this.assetAmounts, this.ballotDeserialized.spends)
+    ) {
+      runInAction(() => {
+        this.ballotId = ''
+        this.ballotDeserialized = {}
+        this.ballotIdValid = false
+      })
+    }
+  }
+
+  // todo implement!
+  deserializeBallotIdOnChange() {
+    if (this.ballotId === '123456789') {
+      runInAction(() => {
+        // test for a valid ballot
+        this.ballotIdValid = true
+        const deserialized = {
+          address: 'tzn1qh3fxhkh5khm6hwqe6aandjlmvae6w3ew502fq8nvpkysq6ecl53qzer433',
+          spends: [{ asset: '00', amount: 1 }],
+        }
+        this.ballotDeserialized = deserialized
+        this.address = deserialized.address
+        this.assetAmounts = deserialized.spends
+      })
+    } else {
+      runInAction(() => {
+        this.ballotIdValid = false
+      })
+    }
   }
 
   @action
