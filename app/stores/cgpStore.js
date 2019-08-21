@@ -87,13 +87,13 @@ class CGPStore {
   ]
   @observable address = ''
   @observable assetAmounts = [{ asset: '', amount: 0 }]
-  @observable inProgressAllocation = false
-  @observable inProgressPayout = false
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
   contractId = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
-  @observable addressCGP =
-    Address.getPublicKeyHashAddress(this.networkStore.chainUnformatted, ContractId.fromString(this.contractId))
+  @observable addressCGP = Address.getPublicKeyHashAddress(
+    this.networkStore.chainUnformatted,
+    ContractId.fromString(this.contractId),
+  )
 
   calculateAllocationMinMax() {
     // TODO call blockchain/cgp/current and calculate the min/max zp/ratio
@@ -215,8 +215,11 @@ class CGPStore {
       true,
     )
 
-    return isValidAddress(this.address, this.networkStore.chain)
-      && this.assetAmountsValid && allAmountsNotExceedingBalance
+    return (
+      isValidAddress(this.address, this.networkStore.chain) &&
+      this.assetAmountsValid &&
+      allAmountsNotExceedingBalance
+    )
   }
 
   @action
@@ -307,7 +310,6 @@ class CGPStore {
   submitAllocationVote = async (confirmedPassword: string) => {
     if (this.allocationValid) {
       try {
-        this.inProgressAllocation = true
         const stringAllocation = 'Allocation'
         const all = serialize(new Allocation(convertAllocation(this.allocation)))
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
@@ -341,10 +343,6 @@ class CGPStore {
           this.statusAllocation = { status: 'error', errorMessage: error.message }
         })
       }
-
-      runInAction(() => {
-        this.inProgressAllocation = false
-      })
     }
   }
 
@@ -352,7 +350,6 @@ class CGPStore {
   submitPayoutVote = async (confirmedPassword: string) => {
     if (this.payoutValid) {
       try {
-        this.inProgressPayout = true
         const stringPayout = 'Payout'
         const payout = serialize(new Payout(
           {
@@ -392,10 +389,6 @@ class CGPStore {
           this.statusPayout = { status: 'error', errorMessage: error.message }
         })
       }
-
-      runInAction(() => {
-        this.inProgressPayout = false
-      })
     }
   }
 }

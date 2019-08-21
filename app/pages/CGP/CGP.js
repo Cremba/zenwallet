@@ -15,12 +15,13 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 import Layout from '../../components/Layout'
 // import Loading from '../../components/Loading'
 // import IsValidIcon from '../../components/IsValidIcon'
-import ProtectedButton from '../../components/Buttons'
+import { protectedModals } from '../../components/Buttons/ProtectedButton'
 import FormResponseMessage from '../../components/FormResponseMessage'
 
 import AllocationForm from './components/AllocationForm'
 import PayoutForm from './components/PayoutForm'
 import InfoBoxes from './components/InfoBoxes'
+import voteOnceModal from './components/voteOnceModal'
 
 @inject(
   'cgpStore',
@@ -32,6 +33,10 @@ import InfoBoxes from './components/InfoBoxes'
 )
 @observer
 class CGP extends Component {
+  state = {
+    inProgressAllocation: false,
+    inProgressPayout: false,
+  }
   componentDidMount() {
     this.props.cgpStore.resetStatuses()
     this.props.cgpStore
@@ -42,9 +47,31 @@ class CGP extends Component {
 
   resetPayoutForm = () => this.props.cgpStore.resetPayout()
 
-  submitAllocationVote = (password) => this.props.cgpStore.submitAllocationVote(password)
+  submitAllocationVote = async () => {
+    const confirmedVoteOnce = await voteOnceModal()
+    if (!confirmedVoteOnce) return
+    this.setState({ inProgressAllocation: true })
+    try {
+      const password = await protectedModals()
+      await this.props.cgpStore.submitAllocationVote(password)
+    } catch (error) {
+      console.log(error.message)
+    }
+    this.setState({ inProgressAllocation: false })
+  }
 
-  submitPayoutVote = (password) => this.props.cgpStore.submitPayoutVote(password)
+  submitPayoutVote = async () => {
+    const confirmedVoteOnce = await voteOnceModal()
+    if (!confirmedVoteOnce) return
+    this.setState({ inProgressPayout: true })
+    try {
+      const password = await protectedModals()
+      await this.props.cgpStore.submitPayoutVote(password)
+    } catch (error) {
+      console.log(error.message)
+    }
+    this.setState({ inProgressPayout: false })
+  }
 
   renderAllocationErrorResponse() {
     const {
@@ -76,13 +103,7 @@ class CGP extends Component {
 
   render() {
     const {
-      cgpStore: {
-        inProgressAllocation,
-        inProgressPayout,
-        payoutValid,
-        payoutHasData,
-        snapshotBlock,
-      },
+      cgpStore: { payoutValid, payoutHasData, snapshotBlock },
       networkStore: { blocks: currentBlock },
     } = this.props
 
@@ -133,13 +154,13 @@ class CGP extends Component {
                   {this.renderAllocationErrorResponse()}
                   {this.renderAllocationSuccessResponse()}
                   <Flexbox flexGrow={2} />
-                  <ProtectedButton
-                    className={cx('button-on-right', { loading: inProgressAllocation })}
-                    disabled={inProgressAllocation}
+                  <button
+                    className={cx('button-on-right', { loading: this.state.inProgressAllocation })}
+                    disabled={this.state.inProgressAllocation}
                     onClick={this.submitAllocationVote}
                   >
-                    {inProgressAllocation ? 'Voting' : 'Vote'}
-                  </ProtectedButton>
+                    {this.state.inProgressAllocation ? 'Voting' : 'Vote'}
+                  </button>
                 </Flexbox>
               </section>
 
@@ -157,18 +178,22 @@ class CGP extends Component {
                   <Flexbox flexGrow={2} />
                   <button
                     className={cx('button-on-right', 'secondary')}
-                    disabled={!payoutHasData || inProgressPayout}
+                    disabled={!payoutHasData || this.state.inProgressPayout}
                     onClick={this.resetPayoutForm}
                   >
                     Reset
                   </button>
-                  <ProtectedButton
-                    className={cx('button-on-right', { loading: inProgressPayout })}
-                    disabled={inProgressPayout || !payoutHasData || (payoutHasData && !payoutValid)}
+                  <button
+                    className={cx('button-on-right', { loading: this.state.inProgressPayout })}
+                    disabled={
+                      this.state.inProgressPayout ||
+                      !payoutHasData ||
+                      (payoutHasData && !payoutValid)
+                    }
                     onClick={this.submitPayoutVote}
                   >
-                    {inProgressPayout ? 'Voting' : 'Vote'}
-                  </ProtectedButton>
+                    {this.state.inProgressPayout ? 'Voting' : 'Vote'}
+                  </button>
                 </Flexbox>
               </section>
             </React.Fragment>
