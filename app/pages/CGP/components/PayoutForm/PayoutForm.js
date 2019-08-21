@@ -126,7 +126,7 @@ class PayoutForm extends Component {
                   name="address"
                   type="text"
                   placeholder="Destination address"
-                  className={cx({ 'is-valid': this.isAddressValid, error: this.isToInvalid })}
+                  className={cx({ 'is-valid': this.isAddressValid, error: this.isAddressInvalid })}
                   autoFocus
                   onChange={this.addressChangeHandler}
                   value={address}
