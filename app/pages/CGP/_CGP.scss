@@ -25,6 +25,17 @@
     overflow: hidden;
   }
 
+  .ballot-table-container {
+    margin-left: 20px;
+    max-height: 371px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+
+    .ballot-id {
+      cursor: pointer;
+    }
+  }
+
   .allocation-form {
     padding-top: 22px;
 

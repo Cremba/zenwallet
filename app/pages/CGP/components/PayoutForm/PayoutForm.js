@@ -11,6 +11,7 @@ import PasteButton from '../../../../components/PasteButton'
 import { isValidAddressOrContract } from '../../../../utils/helpers'
 
 import AssetAmountPair from './components/AssetAmountPair'
+import BallotsTable from './components/BallotsTable'
 
 @inject('cgpStore', 'portfolioStore')
 @observer
@@ -80,102 +81,112 @@ class PayoutForm extends Component {
   render() {
     const {
       cgpStore: {
-        assetAmounts, address, ballotId, ballotIdValid,
+        assetAmounts,
+        address,
+        ballotId,
+        ballotIdValid,
+        lastAssetAmountValid,
       },
-      cgpStore,
     } = this.props
     return (
-      <Flexbox flexDirection="column">
-        <Flexbox flexDirection="column" className="destination-address-input form-row">
-          <label htmlFor="ballotId">Ballot ID</label>
-          <Flexbox flexDirection="row">
-            <Flexbox flexDirection="column" className="full-width relative">
-              <input
-                id="ballotId"
-                name="ballotId"
-                type="text"
-                placeholder="Enter a ballot ID"
-                className={cx({ 'is-valid': ballotIdValid, error: ballotId && !ballotIdValid })}
-                autoFocus
-                onChange={this.ballotChangeHandler}
-                value={ballotId}
-              />
-              <IsValidIcon
-                isValid={ballotIdValid}
-                className="input-icon"
-                hasColors
-                isHidden={!ballotId}
-              />
-              {this.renderBallotIdErrorMessage()}
+      <Flexbox>
+        <Flexbox flexDirection="column" flexGrow={1} className="form-container">
+          <Flexbox flexDirection="column" className="form-row">
+            <label htmlFor="ballotId">Ballot ID</label>
+            <Flexbox flexDirection="row">
+              <Flexbox flexDirection="column" className="full-width relative">
+                <input
+                  id="ballotId"
+                  name="ballotId"
+                  type="text"
+                  placeholder="Enter a ballot ID"
+                  className={cx({ 'is-valid': ballotIdValid, error: ballotId && !ballotIdValid })}
+                  autoFocus
+                  onChange={this.ballotChangeHandler}
+                  value={ballotId}
+                />
+                <IsValidIcon
+                  isValid={ballotIdValid}
+                  className="input-icon"
+                  hasColors
+                  isHidden={!ballotId}
+                />
+                {this.renderBallotIdErrorMessage()}
+              </Flexbox>
+              <PasteButton className="button-on-right" onClick={this.onBallotIdPasteClicked} />
             </Flexbox>
-            <PasteButton className="button-on-right" onClick={this.onBallotIdPasteClicked} />
+          </Flexbox>
+          <OrSeparator />
+          <Flexbox flexDirection="column" className="destination-address-input form-row">
+            <label htmlFor="address">Address</label>
+            <Flexbox flexDirection="row" className="destination-address-input">
+              <Flexbox flexDirection="column" className="full-width relative">
+                <input
+                  id="address"
+                  name="address"
+                  type="text"
+                  placeholder="Destination address"
+                  className={cx({ 'is-valid': this.isAddressValid, error: this.isToInvalid })}
+                  autoFocus
+                  onChange={this.addressChangeHandler}
+                  value={address}
+                />
+                <IsValidIcon
+                  isValid={isValidAddressOrContract(address)}
+                  className="input-icon"
+                  hasColors
+                  isHidden={!address}
+                />
+                {this.renderAddressErrorMessage()}
+              </Flexbox>
+              <PasteButton className="button-on-right" onClick={this.onAddressPasteClicked} />
+            </Flexbox>
+          </Flexbox>
+          <Flexbox flexDirection="column">
+            {assetAmounts.map((item, index) => (
+              <Flexbox flexDirection="row" className="form-row" key={index}>
+                <AssetAmountPair
+                  showLabels={index === 0}
+                  asset={item.asset}
+                  amount={item.amount}
+                  assetBalance={this.props.cgpStore.getBalanceFor(item.asset)}
+                  onChange={data => {
+                    this.assetAmountChangeHandler(data, index)
+                  }}
+                />
+                <div className="remove-container">
+                  {/* DO NOT REMOVE LABEL! */}
+                  {/* the label is a hack to place the buttons in the right height. */}
+                  {index === 0 && <label>x</label>}
+                  <button
+                    disabled={assetAmounts.length === 1}
+                    type="button"
+                    className="btn-plus-minus"
+                    title="Remove"
+                    onClick={() => this.removeAssetAmountPair(index)}
+                  >
+                    <FontAwesomeIcon icon={['far', 'minus-circle']} />{' '}
+                  </button>
+                </div>
+              </Flexbox>
+            ))}
+            <Flexbox className="form-row">
+              <button
+                disabled={!lastAssetAmountValid}
+                type="button"
+                className="button with-icon"
+                title="Add"
+                onClick={this.addAssetAmountPair}
+              >
+                <FontAwesomeIcon icon={['far', 'plus-circle']} />{' '}
+                <span className="button-text">Add Asset & Amount</span>
+              </button>
+            </Flexbox>
           </Flexbox>
         </Flexbox>
-        <OrSeparator />
-        <Flexbox flexDirection="column" className="destination-address-input form-row">
-          <label htmlFor="address">Address</label>
-          <Flexbox flexDirection="row" className="destination-address-input">
-            <Flexbox flexDirection="column" className="full-width relative">
-              <input
-                id="address"
-                name="address"
-                type="text"
-                placeholder="Destination address"
-                className={cx({ 'is-valid': this.isAddressValid, error: this.isToInvalid })}
-                autoFocus
-                onChange={this.addressChangeHandler}
-                value={address}
-              />
-              <IsValidIcon
-                isValid={isValidAddressOrContract(address)}
-                className="input-icon"
-                hasColors
-                isHidden={!address}
-              />
-              {this.renderAddressErrorMessage()}
-            </Flexbox>
-            <PasteButton className="button-on-right" onClick={this.onAddressPasteClicked} />
-          </Flexbox>
-        </Flexbox>
-        <Flexbox flexDirection="column">
-          {assetAmounts.map((item, index) => (
-            <Flexbox flexDirection="row" className="form-row" key={index}>
-              <AssetAmountPair
-                showLabels={index === 0}
-                asset={item.asset}
-                amount={item.amount}
-                assetBalance={cgpStore.getBalanceFor(item.asset)}
-                onChange={data => {
-                  this.assetAmountChangeHandler(data, index)
-                }}
-              />
-              <div className="remove-container">
-                {/* the label is a hack to place the buttons in the right height. do not remove! */}
-                {index === 0 && <label>x</label>}
-                <button
-                  disabled={assetAmounts.length === 1}
-                  type="button"
-                  className="btn-plus-minus"
-                  title="Remove"
-                  onClick={() => this.removeAssetAmountPair(index)}
-                >
-                  <FontAwesomeIcon icon={['far', 'minus-circle']} />{' '}
-                </button>
-              </div>
-            </Flexbox>
-          ))}
-          <Flexbox className="form-row">
-            <button
-              disabled={!this.props.cgpStore.lastAssetAmountValid}
-              type="button"
-              className="button with-icon"
-              title="Add"
-              onClick={this.addAssetAmountPair}
-            >
-              <FontAwesomeIcon icon={['far', 'plus-circle']} />{' '}
-              <span className="button-text">Add Asset & Amount</span>
-            </button>
-          </Flexbox>
+
+        <Flexbox className="form-container ballot-table-container">
+          <BallotsTable />
         </Flexbox>
       </Flexbox>
     )

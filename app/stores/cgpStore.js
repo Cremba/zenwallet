@@ -63,6 +63,26 @@ class CGPStore {
   @observable ballotId = ''
   @observable ballotDeserialized = {}
   @observable ballotIdValid = false
+  // TODO DEMO - replace with real data
+  @observable popularBallots = [
+    { id: '123456789', zpVoted: 50 },
+    { id: 'fliocshdicsh', zpVoted: 50 },
+    { id: 'shdjsdj', zpVoted: 50 },
+    { id: 'wiuoiwuroewuroiew', zpVoted: 50 },
+    { id: 'ldkfjlsdkfsjd', zpVoted: 50 },
+    { id: 'eueeeeeeeeeeee', zpVoted: 50 },
+    { id: '0000000000000000', zpVoted: 50 },
+    { id: 'lllllllllllllllll', zpVoted: 50 },
+    { id: 'saruiureiwiruiwuiri', zpVoted: 50 },
+    { id: 'popopopoopopo', zpVoted: 50 },
+    { id: '22222222333333333333', zpVoted: 50 },
+    { id: 'llllllllllll', zpVoted: 50 },
+    { id: 'xlsdosddsfoid', zpVoted: 50 },
+    { id: 'pqpqpqpqwq', zpVoted: 50 },
+    { id: 'd9dfeif9eeefe', zpVoted: 50 },
+    { id: 'lkdsuiuouo', zpVoted: 50 },
+    { id: 'iueiwuieuwiueiwuieuiwuieiwiwueiuwiueiw', zpVoted: 50 },
+  ]
   @observable address = ''
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable inProgressAllocation = false

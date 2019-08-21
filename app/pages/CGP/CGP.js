@@ -147,7 +147,7 @@ class CGP extends Component {
                 <Flexbox className="section-title">
                   <h1>CGP Payout</h1>
                 </Flexbox>
-                <Flexbox flexDirection="column" className="form-container">
+                <Flexbox flexDirection="column">
                   <PayoutForm />
                 </Flexbox>
 
