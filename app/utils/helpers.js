@@ -2,15 +2,17 @@
 
 import { Buffer } from 'buffer'
 
-import bech32 from 'bech32'
-import { Data, Address, Chain } from '@zen/zenjs'
+import { Data, Chain } from '@zen/zenjs'
+import { Spend } from '@zen/zenjs/build/src/Consensus/Types/Spend'
+import { Payout, Recipient } from '@zen/zenjs/build//src/Consensus/Types/Payout'
+import Address from '@zen/zenjs/build/src/Components/Wallet/Address'
+import { ContractId } from '@zen/zenjs/build//src/Consensus/Types/ContractId'
 import { sha3_256 as sha } from 'js-sha3'
 import BigInteger from 'bigi'
 
 import db from '../services/db'
 import { ZEN_ASSET_NAME, ZEN_ASSET_HASH } from '../constants'
 
-const validPrefixes = ['zen', 'tzn', 'czen', 'ctzn']
 const savedContracts = db.get('savedContracts').value()
 
 export const isDev = () => process.env.NODE_ENV === 'development'
@@ -55,15 +57,44 @@ export const isValidAddress = (address: ?string, chain?: Chain = 'test'): boolea
   }
 }
 
-export const isValidAddressOrContract = (address: ?string): boolean => {
+export const toSpend = (spends: { asset: string, amount: number }[]) => {
+  const spendArr: Spend[] = []
+  spends.forEach((asset, amount) => spendArr.push(new Spend(asset, amount)))
+  return spendArr
+}
+
+export const getAddress = (recipient: Recipient) => {
+  switch (recipient.kind) {
+    case 'PKRecipient':
+      return recipient.hash.hash
+    case 'ContractRecipient':
+      return recipient.contractId
+    default:
+      return ''
+  }
+}
+
+export const toPayout
+  = (chain, recipient: string, spends: { asset: string, amount: number }[]): Payout => {
+    const spendArr = toSpend(spends)
+    const address = Address.decode(chain, recipient)
+    if (address instanceof ContractId) {
+      return new Payout({
+        kind: 'PKRecipient',
+        hash: address,
+      }, spendArr)
+    }
+    return new Payout({
+      kind: 'ContractRecipient',
+      contractId: address,
+    }, spendArr)
+  }
+
+export const checkBallot = (hex: string) => {
   try {
-    const { prefix, words } = bech32.decode(address)
-    const pkHash = bech32.fromWords(words.slice(1))
-    const isPrefixValid = (validPrefixes.indexOf(prefix) > -1)
-    return (pkHash.length === 36 || pkHash.length === 32) && isPrefixValid
-  } catch (err) {
-    // uncomment for debugging, this throws many errors from the bech32 package
-    // console.error('validateAddress err', err)
+    const payout = Payout.fromHex(hex)
+    return 2 * payout.getSize() === hex.length
+  } catch (e) {
     return false
   }
 }

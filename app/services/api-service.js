@@ -1,7 +1,7 @@
 // @flow
 import axios from 'axios'
 import type { observableArray } from 'mobx-react'
-import zenjs from '@zen/zenjs'
+import { Address as AddressZenjs} from '@zen/zenjs'
 import { ContractId } from '@zen/zenjs/build/src/Consensus/Types/ContractId'
 
 import { getServerAddress, getCrowdsaleServerAddress } from '../config/server-address'
@@ -212,7 +212,7 @@ export async function getContractTXHistory(chain: string, contractId: string, sk
   const data = {
     skip,
     take,
-    addresses: [zenjs.Address.getPublicKeyHashAddress(chain, ContractId.fromString(contractId))],
+    addresses: [AddressZenjs.getPublicKeyHashAddress(chain, ContractId.fromString(contractId))],
   }
   const response = await axios.post(`http://${endpoint}/addressdb/transactions`, data, {
     headers: { 'Content-Type': 'application/json' },

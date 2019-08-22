@@ -6,7 +6,8 @@ import { Decimal } from 'decimal.js'
 import BigInteger from 'bigi'
 import { Data } from '@zen/zenjs'
 import { Hash } from '@zen/zenjs/build/src/Consensus/Types/Hash'
-import { Allocation, Payout } from '@zen/zenjs/build/src/Consensus/Types/VoteData'
+import { Allocation } from '@zen/zenjs/build/src/Consensus/Types/Allocation'
+import { Payout } from '@zen/zenjs/build/src/Consensus/Types/Payout'
 import { ContractId } from '@zen/zenjs/build/src/Consensus/Types/ContractId'
 import Address from '@zen/zenjs/build/src/Components/Wallet/Address'
 
@@ -16,7 +17,7 @@ import {
   numberWithCommas,
   payloadData,
   convertAllocation,
-  serialize,
+  toPayout, checkBallot, getAddress,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
 import { getContractBalance, getCgp } from '../services/api-service'
@@ -263,19 +264,20 @@ class CGPStore {
     }
   }
 
-  // todo implement!
   deserializeBallotIdOnChange() {
-    if (this.ballotId === '123456789') {
+    if (checkBallot(this.ballotId)) {
       runInAction(() => {
         // test for a valid ballot
         this.ballotIdValid = true
-        const deserialized = {
-          address: 'tzn1qh3fxhkh5khm6hwqe6aandjlmvae6w3ew502fq8nvpkysq6ecl53qzer433',
-          spends: [{ asset: '00', amount: 1 }],
-        }
-        this.ballotDeserialized = deserialized
-        this.address = deserialized.address
-        this.assetAmounts = deserialized.spends
+        const { recipient, spends } = Payout.fromHex(this.ballotId)
+        this.ballotDeserialized = Payout.fromHex(this.ballotId)
+        this.address =
+          Address.getPublicKeyHashAddress(this.networkStore.chainUnformatted,getAddress(recipient))
+        const assets = spends.map(spend => {
+          const { asset, amount } = spend
+          return { asset: asset.asset, amount: amount.intValue() }
+        })
+        this.assetAmounts = assets
       })
     } else {
       runInAction(() => {
@@ -311,7 +313,7 @@ class CGPStore {
     if (this.allocationValid) {
       try {
         const stringAllocation = 'Allocation'
-        const all = serialize(new Allocation(convertAllocation(this.allocation)))
+        const all = new Allocation(convertAllocation(this.allocation)).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
         const message = Hash.compute(interval.toString().concat(all)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
@@ -351,13 +353,7 @@ class CGPStore {
     if (this.payoutValid) {
       try {
         const stringPayout = 'Payout'
-        const payout = serialize(new Payout(
-          {
-            kind: 'PKRecipient',
-            address: this.address,
-          },
-          this.assetAmounts,
-        ))
+        const payout = toPayout(this.address, this.assetAmounts).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
         const message = Hash.compute(interval.toString().concat(payout)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
