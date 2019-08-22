@@ -7,6 +7,7 @@ import { Spend } from '@zen/zenjs/build/src/Consensus/Types/Spend'
 import { Payout, Recipient } from '@zen/zenjs/build//src/Consensus/Types/Payout'
 import Address from '@zen/zenjs/build/src/Components/Wallet/Address'
 import { ContractId } from '@zen/zenjs/build//src/Consensus/Types/ContractId'
+import { Asset } from '@zen/zenjs/build/src/Consensus/Types/Asset'
 import { sha3_256 as sha } from 'js-sha3'
 import BigInteger from 'bigi'
 
@@ -44,6 +45,26 @@ export const serialize = (data) => {
   return buffer.toString('hex')
 }
 
+export const snapshotBalance = (transactions, snapshotBlock, headers) => {
+  const dict = {}
+  transactions
+    .filter(t => headers - t.confirmations
+      >= Number(snapshotBlock))
+    .map(t => {
+      const { asset, amount } = t
+      return { asset, balance: amount }
+    })
+    .forEach((d) => {
+      if (d.asset in dict) {
+        dict[d.asset] += d.balance
+      } else {
+        dict[d.asset] = d.balance
+      }
+    })
+
+  return Object.keys(dict).map(asset => ({ asset, balance: dict[asset] }))
+}
+
 export const stringToNumber = (str: ?string) => str && parseFloat(str.replace(/,/g, ''))
 
 export const isValidAddress = (address: ?string, chain?: Chain = 'test'): boolean => {
@@ -57,11 +78,10 @@ export const isValidAddress = (address: ?string, chain?: Chain = 'test'): boolea
   }
 }
 
-export const toSpend = (spends: { asset: string, amount: number }[]) => {
-  const spendArr: Spend[] = []
-  spends.forEach((asset, amount) => spendArr.push(new Spend(asset, amount)))
-  return spendArr
-}
+export const toSpend = (spends: { asset: string, amount: number }[]) =>
+  spends
+    .map((asset, amount) =>
+      new Spend(new Asset(asset.asset), new BigInteger(amount, 10, undefined)))
 
 export const getAddress = (recipient: Recipient) => {
   switch (recipient.kind) {
@@ -80,13 +100,13 @@ export const toPayout
     const address = Address.decode(chain, recipient)
     if (address instanceof ContractId) {
       return new Payout({
-        kind: 'PKRecipient',
-        hash: address,
+        kind: 'ContractRecipient',
+        contractId: address,
       }, spendArr)
     }
     return new Payout({
-      kind: 'ContractRecipient',
-      contractId: address,
+      kind: 'PKRecipient',
+      hash: address,
     }, spendArr)
   }
 

@@ -17,10 +17,10 @@ import {
   numberWithCommas,
   payloadData,
   convertAllocation,
-  toPayout, checkBallot, getAddress,
+  toPayout, checkBallot, getAddress, snapshotBalance,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
-import { getContractBalance, getCgp } from '../services/api-service'
+import { getCgp, getContractTXHistory } from '../services/api-service'
 
 class CGPStore {
   constructor(publicStore, networkStore, txHistoryStore, portfolioStore, authStore, runStore) {
@@ -90,10 +90,15 @@ class CGPStore {
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
-  contractId = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
+  cIdCgp = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
+  cIdVote = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
   @observable addressCGP = Address.getPublicKeyHashAddress(
     this.networkStore.chainUnformatted,
-    ContractId.fromString(this.contractId),
+    ContractId.fromString(this.cIdCgp),
+  )
+  @observable addressVote = Address.getPublicKeyHashAddress(
+    this.networkStore.chainUnformatted,
+    ContractId.fromString(this.cIdVote),
   )
 
   calculateAllocationMinMax() {
@@ -125,8 +130,11 @@ class CGPStore {
 
   @action
   async fetchAssets() {
-    const assets = await getContractBalance(this.networkStore.chain, this.addressCGP, 0, 65535)
-    runInAction(() => this.assetCGP.replace(assets))
+    const transactions =
+      await getContractTXHistory(this.networkStore.chain, this.addressCGP, 0, 65535)
+    runInAction(() =>
+      this.assetCGP
+        .replace(snapshotBalance(transactions, this.snapshotBlock, this.networkStore.blocks)))
   }
 
   @computed
@@ -272,12 +280,12 @@ class CGPStore {
         const { recipient, spends } = Payout.fromHex(this.ballotId)
         this.ballotDeserialized = Payout.fromHex(this.ballotId)
         this.address =
-          Address.getPublicKeyHashAddress(this.networkStore.chainUnformatted,getAddress(recipient))
+          Address.getPublicKeyHashAddress(this.networkStore.chainUnformatted, getAddress(recipient))
         const assets = spends.map(spend => {
           const { asset, amount } = spend
           return { asset: asset.asset, amount: amount.intValue() }
         })
-        this.assetAmounts = assets
+        this.assetAmounts.replace(assets)
       })
     } else {
       runInAction(() => {
@@ -335,7 +343,7 @@ class CGPStore {
           .catch(error => console.log(error))
         await this.runContractStore.run(
           confirmedPassword,
-          payloadData(this.contractId, data, stringAllocation),
+          payloadData(this.addressVote, data, stringAllocation),
         )
         runInAction(() => {
           this.statusAllocation = { status: 'success' }
@@ -353,7 +361,8 @@ class CGPStore {
     if (this.payoutValid) {
       try {
         const stringPayout = 'Payout'
-        const payout = toPayout(this.address, this.assetAmounts).toHex()
+        const payout =
+          toPayout(this.networkStore.chainUnformatted, this.address, this.assetAmounts).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
         const message = Hash.compute(interval.toString().concat(payout)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
@@ -375,7 +384,7 @@ class CGPStore {
           .catch(error => console.log(error))
         await this.runContractStore.run(
           confirmedPassword,
-          payloadData(this.contractId, data, stringPayout),
+          payloadData(this.addressVote, data, stringPayout),
         )
         runInAction(() => {
           this.statusPayout = { status: 'success' }
