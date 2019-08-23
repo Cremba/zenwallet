@@ -22,16 +22,9 @@ class BallotsTable extends Component<Props> {
     const { popularBallots } = this.props.cgpStore
     return popularBallots.map(ballot => (
       <Fragment key={`${ballot.id}`}>
-        <tr>
+        <tr onClick={this.ballotIdClickHandler} data-value={ballot.id} className="ballot-row">
           <td>
-            <div
-              className="ballot-id"
-              data-value={ballot.id}
-              onClick={this.ballotIdClickHandler}
-              title={`Vote for Ballot ID = ${ballot.id}`}
-            >
-              {truncateString(ballot.id)}
-            </div>
+            <div title={ballot.id}>{truncateString(ballot.id)}</div>
           </td>
           <td>{ballot.zpVoted} ZP</td>
         </tr>
