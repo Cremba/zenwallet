@@ -17,7 +17,10 @@ import {
   numberWithCommas,
   payloadData,
   convertAllocation,
-  toPayout, checkBallot, getAddress, snapshotBalance,
+  toPayout,
+  checkBallot,
+  getAddress,
+  snapshotBalance,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
 import { getCgp, getContractTXHistory } from '../services/api-service'
@@ -90,16 +93,24 @@ class CGPStore {
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
-  cIdCgp = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
-  cIdVote = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
-  @observable addressCGP = Address.getPublicKeyHashAddress(
-    this.networkStore.chainUnformatted,
-    ContractId.fromString(this.cIdCgp),
-  )
-  @observable addressVote = Address.getPublicKeyHashAddress(
-    this.networkStore.chainUnformatted,
-    ContractId.fromString(this.cIdVote),
-  )
+  contractIdCgp = '00000000e15e60b4e8d9f2ae48772e3d0f23c953ef061ef01f93ab8c6200b853225942c4' // '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
+  contractIdVote = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
+
+  @computed
+  get addressCGP() {
+    return Address.getPublicKeyHashAddress(
+      this.networkStore.chainUnformatted,
+      ContractId.fromString(this.contractIdCgp),
+    )
+  }
+
+  @computed
+  get addressVote() {
+    return Address.getPublicKeyHashAddress(
+      this.networkStore.chainUnformatted,
+      ContractId.fromString(this.contractIdVote),
+    )
+  }
 
   calculateAllocationMinMax() {
     // TODO call blockchain/cgp/current and calculate the min/max zp/ratio
@@ -130,8 +141,12 @@ class CGPStore {
 
   @action
   async fetchAssets() {
-    const transactions =
-      await getContractTXHistory(this.networkStore.chain, this.addressCGP, 0, 65535)
+    const transactions = await getContractTXHistory(
+      this.networkStore.chain,
+      this.addressCGP,
+      0,
+      65535,
+    )
     runInAction(() =>
       this.assetCGP
         .replace(snapshotBalance(transactions, this.snapshotBlock, this.networkStore.blocks)))
@@ -279,8 +294,10 @@ class CGPStore {
         this.ballotIdValid = true
         const { recipient, spends } = Payout.fromHex(this.ballotId)
         this.ballotDeserialized = Payout.fromHex(this.ballotId)
-        this.address =
-          Address.getPublicKeyHashAddress(this.networkStore.chainUnformatted, getAddress(recipient))
+        this.address = Address.getPublicKeyHashAddress(
+          this.networkStore.chainUnformatted,
+          getAddress(recipient),
+        )
         const assets = spends.map(spend => {
           const { asset, amount } = spend
           return { asset: asset.asset, amount: amount.intValue() }
@@ -361,8 +378,11 @@ class CGPStore {
     if (this.payoutValid) {
       try {
         const stringPayout = 'Payout'
-        const payout =
-          toPayout(this.networkStore.chainUnformatted, this.address, this.assetAmounts).toHex()
+        const payout = toPayout(
+          this.networkStore.chainUnformatted,
+          this.address,
+          this.assetAmounts,
+        ).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
         const message = Hash.compute(interval.toString().concat(payout)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
