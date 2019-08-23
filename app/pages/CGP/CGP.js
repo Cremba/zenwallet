@@ -55,26 +55,32 @@ class CGP extends Component {
     const confirmedVoteOnce = await voteOnceModal()
     if (!confirmedVoteOnce) return
     this.setState({ inProgressAllocation: true })
-    try {
-      const password = await protectedModals()
-      await this.props.cgpStore.submitAllocationVote(password)
-    } catch (error) {
-      console.log(error.message)
-    }
-    this.setState({ inProgressAllocation: false })
+    // prevent enter from closing the new swal HACK
+    setTimeout(async () => {
+      try {
+        const password = await protectedModals()
+        await this.props.cgpStore.submitAllocationVote(password)
+      } catch (error) {
+        console.log(error.message)
+      }
+      this.setState({ inProgressAllocation: false })
+    }, 100)
   }
 
   submitPayoutVote = async () => {
     const confirmedVoteOnce = await voteOnceModal()
     if (!confirmedVoteOnce) return
     this.setState({ inProgressPayout: true })
-    try {
-      const password = await protectedModals()
-      await this.props.cgpStore.submitPayoutVote(password)
-    } catch (error) {
-      console.log(error.message)
-    }
-    this.setState({ inProgressPayout: false })
+    // prevent enter from closing the new swal HACK
+    setTimeout(async () => {
+      try {
+        const password = await protectedModals()
+        await this.props.cgpStore.submitPayoutVote(password)
+      } catch (error) {
+        console.log(error.message)
+      }
+      this.setState({ inProgressPayout: false })
+    }, 100)
   }
 
   renderAllocationErrorResponse() {
@@ -152,7 +158,10 @@ class CGP extends Component {
                 <Flexbox className="section-title">
                   <h1>CGP Allocation</h1>
                 </Flexbox>
-                <Flexbox flexDirection="column" className={cx('form-container allocation', { invalid: !allocationValid })}>
+                <Flexbox
+                  flexDirection="column"
+                  className={cx('form-container allocation', { invalid: !allocationValid })}
+                >
                   <Flexbox className="form-row" />
                   <AllocationForm />
                 </Flexbox>
