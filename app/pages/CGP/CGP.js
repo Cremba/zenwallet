@@ -7,11 +7,6 @@ import { inject, observer } from 'mobx-react'
 import cx from 'classnames'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
-// import CGPStore from '../../stores/cgpStore'
-// import PublicAddressStore from '../../stores/publicAddressStore'
-// import RunContractStore from '../../stores/runContractStore'
-// import { isValidHex, hashVoteData, payloadData } from '../../utils/helpers'
-// import { ref } from '../../utils/domUtils'
 import Layout from '../../components/Layout'
 // import Loading from '../../components/Loading'
 // import IsValidIcon from '../../components/IsValidIcon'
@@ -22,6 +17,7 @@ import AllocationForm from './components/AllocationForm'
 import PayoutForm from './components/PayoutForm'
 import InfoBoxes from './components/InfoBoxes'
 import voteOnceModal from './components/voteOnceModal'
+import BallotsTable from './components/BallotsTable'
 
 @inject(
   'cgpStore',
@@ -153,65 +149,80 @@ class CGP extends Component {
           )}
 
           {isDuringVote && (
-            <React.Fragment>
-              <section>
-                <Flexbox className="section-title">
-                  <h1>CGP Allocation</h1>
-                </Flexbox>
-                <Flexbox
-                  flexDirection="column"
-                  className={cx('form-container allocation', { invalid: !allocationValid })}
-                >
-                  <Flexbox className="form-row" />
-                  <AllocationForm />
-                </Flexbox>
-                <Flexbox justifyContent="space-between" flexDirection="row">
-                  {this.renderAllocationErrorResponse()}
-                  {this.renderAllocationSuccessResponse()}
-                  <Flexbox flexGrow={2} />
-                  <button
-                    className={cx('button-on-right', { loading: this.state.inProgressAllocation })}
-                    disabled={this.state.inProgressAllocation || !allocationValid}
-                    onClick={this.submitAllocationVote}
+            <Flexbox>
+              <Flexbox flexGrow={1} flexDirection="column" className="form-container">
+                <section>
+                  <Flexbox
+                    flexDirection="column"
+                    className={cx('allocation-form-container', { invalid: !allocationValid })}
                   >
-                    {this.state.inProgressAllocation ? 'Voting' : 'Vote'}
-                  </button>
-                </Flexbox>
-              </section>
+                    <Flexbox className="section-title">
+                      <h1>CGP Allocation</h1>
+                    </Flexbox>
+                    <AllocationForm />
+                  </Flexbox>
+                  <Flexbox justifyContent="space-between" flexDirection="row">
+                    {this.renderAllocationErrorResponse()}
+                    {this.renderAllocationSuccessResponse()}
+                    <Flexbox flexGrow={2} />
+                    <button
+                      className={cx('button-on-right', {
+                        loading: this.state.inProgressAllocation,
+                      })}
+                      disabled={this.state.inProgressAllocation || !allocationValid}
+                      onClick={this.submitAllocationVote}
+                    >
+                      {this.state.inProgressAllocation ? 'Voting' : 'Vote'}
+                    </button>
+                  </Flexbox>
+                </section>
 
-              <section>
-                <Flexbox className="section-title">
-                  <h1>CGP Payout</h1>
-                </Flexbox>
-                <Flexbox flexDirection="column">
-                  <PayoutForm />
-                </Flexbox>
+                <section>
+                  <Flexbox flexDirection="column" className="payout-form-container">
+                    <Flexbox className="section-title">
+                      <h1>CGP Payout</h1>
+                    </Flexbox>
+                    <PayoutForm />
+                  </Flexbox>
 
-                <Flexbox justifyContent="space-between" flexDirection="row">
-                  {this.renderPayoutErrorResponse()}
-                  {this.renderPayoutSuccessResponse()}
-                  <Flexbox flexGrow={2} />
-                  <button
-                    className={cx('button-on-right', 'secondary')}
-                    disabled={!payoutHasData || this.state.inProgressPayout}
-                    onClick={this.resetPayoutForm}
-                  >
-                    Reset
-                  </button>
-                  <button
-                    className={cx('button-on-right', { loading: this.state.inProgressPayout })}
-                    disabled={
-                      this.state.inProgressPayout ||
-                      !payoutHasData ||
-                      (payoutHasData && !payoutValid)
-                    }
-                    onClick={this.submitPayoutVote}
-                  >
-                    {this.state.inProgressPayout ? 'Voting' : 'Vote'}
-                  </button>
-                </Flexbox>
-              </section>
-            </React.Fragment>
+                  <Flexbox justifyContent="space-between" flexDirection="row">
+                    {this.renderPayoutErrorResponse()}
+                    {this.renderPayoutSuccessResponse()}
+                    <Flexbox flexGrow={2} />
+                    <button
+                      className={cx('button-on-right', 'secondary')}
+                      disabled={!payoutHasData || this.state.inProgressPayout}
+                      onClick={this.resetPayoutForm}
+                    >
+                      Reset
+                    </button>
+                    <button
+                      className={cx('button-on-right', { loading: this.state.inProgressPayout })}
+                      disabled={
+                        this.state.inProgressPayout ||
+                        !payoutHasData ||
+                        (payoutHasData && !payoutValid)
+                      }
+                      onClick={this.submitPayoutVote}
+                    >
+                      {this.state.inProgressPayout ? 'Voting' : 'Vote'}
+                    </button>
+                  </Flexbox>
+                </section>
+              </Flexbox>
+              <Flexbox className="form-container ballot-table-container">
+                <section>
+                  <Flexbox flexDirection="column" >
+                    <div className="section-title">
+                      <h1>Popular Ballots</h1>
+                    </div>
+                    <div className="ballot-table">
+                      <BallotsTable />
+                    </div>
+                  </Flexbox>
+                </section>
+              </Flexbox>
+            </Flexbox>
           )}
         </Flexbox>
       </Layout>

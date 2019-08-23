@@ -1,6 +1,9 @@
 @import "styles/Variables";
 
 .cgp {
+  .form-container {
+    min-width: 320px;
+  }
   section {
     margin-bottom: 22px;
 
@@ -10,6 +13,10 @@
   }
 
   .section-title {
+    font-size: 1.2rem;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    
     h1 {
       color: $off-white;
       margin-bottom: 10px;
@@ -21,9 +28,7 @@
     margin-right: 20px;
   }
 
-  .form-container.allocation {
-    overflow: hidden;
-
+  .allocation-form-container {
     &.invalid {
       .allocation-input {
         .input-range__track--active {
@@ -42,20 +47,30 @@
     }
   }
 
+  .allocation-form-container,
+  .payout-form-container {
+    margin-bottom: 40px;
+  }
+
   .ballot-table-container {
     margin-left: 20px;
-    max-height: 371px;
-    overflow-y: scroll;
-    overflow-x: hidden;
 
-    .ballot-row {
-      cursor: pointer;
+    .ballot-table {
+      max-height: 620px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+
+      .ballot-row {
+        cursor: pointer;
+      }
     }
+
   }
 
   .allocation-form {
-    padding-top: 22px;
-
+    .allocation-input-container {
+      margin-top: 20px;
+    }
     .allocation-input {
       .input-range__track--active {
         background-color: $blue;

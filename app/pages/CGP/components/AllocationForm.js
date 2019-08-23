@@ -22,7 +22,7 @@ class AllocationForm extends Component {
     } = this.props
     return (
       <Flexbox flexDirection="column" className="allocation-form">
-        <Flexbox flexDirection="column" className="form-row">
+        <Flexbox flexDirection="column" className="form-row allocation-input-container">
           <div className="allocation-input">
             <InputRange
               step={0.001}

@@ -5,8 +5,8 @@ import Flexbox from 'flexbox-react'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
 // import OnScrollBottom from '../../../../../components/OnScrollBottom'
-import CgpStore from '../../../../../stores/cgpStore'
-import { truncateString } from '../../../../../utils/helpers'
+import CgpStore from '../../../stores/cgpStore'
+import { truncateString } from '../../../utils/helpers'
 
 type Props = {
   cgpStore: CgpStore
@@ -49,7 +49,7 @@ class BallotsTable extends Component<Props> {
     // const { fetchBallots } = this.props.cgpStore
     return (
       <div>
-        <Flexbox className="balance-list">
+        <Flexbox>
           <table>
             <thead>
               <tr>
