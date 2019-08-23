@@ -205,8 +205,8 @@ export async function getTxHistory({
   return response.data
 }
 
-  const endpoint = chain === MAINNET ? '18.219.248.93:5050' : '3.19.92.99:8085'
 export async function getContractTXHistory(chain: string, address: string, skip, take) {
+  const endpoint = chain === MAINNET ? '18.219.248.93:5050' : '3.19.92.99:8085'
   const data = {
     skip,
     take,
