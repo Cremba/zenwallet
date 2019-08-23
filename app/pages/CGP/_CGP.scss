@@ -23,6 +23,23 @@
 
   .form-container.allocation {
     overflow: hidden;
+
+    &.invalid {
+      .allocation-input {
+        .input-range__track--active {
+          background-color: $red;
+        }
+        .input-range__slider {
+          background-color: $red-focus;
+          border-color: $red-focus;
+        }
+        .input-range__label-container {
+          .value {
+            background-color: $red;
+          }
+        }
+      }
+    }
   }
 
   .ballot-table-container {
@@ -50,9 +67,13 @@
       .input-range__label-container {
         left: 0;
 
-        .value.above-middle {
+        .value {
+          border-radius: 5px;
+          top: -2px;
+          background-color: $blue;
+          padding: 2px 5px;
           position: relative;
-          left: -100%;
+          left: -50%;
         }
       }
     }

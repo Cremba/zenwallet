@@ -39,11 +39,11 @@ class CGP extends Component {
   }
   componentDidMount() {
     this.props.cgpStore.resetStatuses()
-    this.props.cgpStore
+    this.props.networkStore
       .fetch()
       .then()
       .catch()
-    this.props.networkStore
+    this.props.cgpStore
       .fetch()
       .then()
       .catch()
@@ -107,7 +107,9 @@ class CGP extends Component {
 
   render() {
     const {
-      cgpStore: { payoutValid, payoutHasData, snapshotBlock },
+      cgpStore: {
+        payoutValid, allocationValid, payoutHasData, snapshotBlock,
+      },
       networkStore: { blocks: currentBlock },
     } = this.props
 
@@ -150,7 +152,7 @@ class CGP extends Component {
                 <Flexbox className="section-title">
                   <h1>CGP Allocation</h1>
                 </Flexbox>
-                <Flexbox flexDirection="column" className="form-container allocation">
+                <Flexbox flexDirection="column" className={cx('form-container allocation', { invalid: !allocationValid })}>
                   <Flexbox className="form-row" />
                   <AllocationForm />
                 </Flexbox>
@@ -160,7 +162,7 @@ class CGP extends Component {
                   <Flexbox flexGrow={2} />
                   <button
                     className={cx('button-on-right', { loading: this.state.inProgressAllocation })}
-                    disabled={this.state.inProgressAllocation}
+                    disabled={this.state.inProgressAllocation || !allocationValid}
                     onClick={this.submitAllocationVote}
                   >
                     {this.state.inProgressAllocation ? 'Voting' : 'Vote'}
