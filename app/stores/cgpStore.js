@@ -16,18 +16,18 @@ import {
   isValidAddress,
   numberWithCommas,
   payloadData,
-  convertAllocation,
+  convertZPtoPercentage,
   toPayout,
   checkBallot,
   getAddress,
-  snapshotBalance, format,
+  snapshotBalance, format, convertPercentageToZP,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
 import {
   getCgp,
   getContractBalance,
   getContractHistory,
-  getContractTXHistory
+  getContractTXHistory,
 } from '../services/api-service'
 
 class CGPStore {
@@ -75,8 +75,10 @@ class CGPStore {
   @observable ballotId = ''
   @observable ballotDeserialized = {}
   @observable ballotIdValid = false
-  @observable allocationVote = false
-  @observable payoutVote = false
+  @observable allocationVoted = false
+  @observable payoutVoted = false
+  @observable pastAllocation = 0
+  @observable pastBallotId = ''
   // TODO DEMO - replace with real data
   @observable popularBallots = [
     { id: '123456789', zpVoted: 50 },
@@ -101,7 +103,7 @@ class CGPStore {
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
-  contractIdCgp = '00000000e15e60b4e8d9f2ae48772e3d0f23c953ef061ef01f93ab8c6200b853225942c4' // '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
+  contractIdCgp = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
   contractIdVote = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
 
   @computed
@@ -146,7 +148,7 @@ class CGPStore {
       // todo get info from cgpHistory
     })
     const balance =
-      await getContractBalance(this.networkStore.chainUnformatted,this.addressCGP, 0, 100000)
+      await getContractBalance(this.networkStore.chainUnformatted, this.addressCGP, 0, 100000)
     runInAction(() => {
       const filtered = balance.filter(data => data.asset === '00')[0].balance
       this.cgpCurrentZPBalance = format(filtered)
@@ -154,27 +156,55 @@ class CGPStore {
     })
   }
 
-
+  @action
   async getVote(command, snapshotBlock) {
     await this.txHistoryStore.fetch()
     const internalTx = this.txHistoryStore.transactions.map(t => t.txHash)
     const transactions =
       await getContractHistory(this.networkStore.chain, this.contractIdVote, 0, 10000000)
-    if (isEmpty(this.txHistoryStore.transactions)) return false
+    if (isEmpty(this.txHistoryStore.transactions) || isEmpty(transactions)) return []
     const tx = transactions
       .filter(t => t.command === command)
       .filter(t => this.networkStore.headers - t.confirmations
         >= Number(snapshotBlock))
       .map(t => t.txHash)
       .filter(e => internalTx.includes(e))
-    return !isEmpty(tx)
+    return tx
+  }
+  @action
+  async hasVoted(command, snapshotBlock) {
+    const vote = await this.getVote(command, snapshotBlock)
+    return !isEmpty(vote)
+  }
+
+  async voted(command, snapshotBlock) {
+    const votes = await this.getVote(command, snapshotBlock)
+    const vote = votes[0]
+    const transactions =
+      await getContractHistory(this.networkStore.chain, this.contractIdVote, 0, 10000000)
+    const tx = transactions.find(t => t.txHash === vote)
+    const serialized = tx.messageBody.dict.find(txs => txs[0] === command)[1].string
+    switch (command) {
+      case 'Allocation':
+        this.pastAllocation = convertPercentageToZP(Allocation.fromHex(serialized).allocation)
+        break
+      case 'Payout':
+        this.pastBallotId = serialized
+        break
+      default:
+        break
+    }
   }
 
   @action
   async fetchAssets() {
-    this.allocationVote = await this.getVote('Allocation', this.snapshotBlock)
-    this.payoutVote = await this.getVote('Payout', this.snapshotBlock)
+    this.allocationVoted = await this.hasVoted('Allocation', this.snapshotBlock)
+    this.payoutVoted = await this.hasVoted('Payout', this.snapshotBlock)
     this.snapshotBalanceAcc = await this.txHistoryStore.fetchSnapshot(this.snapshotBlock)
+    if (this.isVotingInterval) {
+      await this.voted('Allocation', this.snapshotBlock)
+      await this.voted('Payout', this.snapshotBlock)
+    }
     const transactions = await getContractTXHistory(
       this.networkStore.chain,
       this.addressCGP,
@@ -212,6 +242,12 @@ class CGPStore {
   @computed
   get intervalLength() {
     return this.networkStore.chain === MAINNET ? 10000 : 100
+  }
+
+  @computed
+  get isVotingInterval() {
+    return this.snapshotBlock <= this.networkStore.headers
+      && this.networkStore.headers > this.tallyBlock
   }
 
   @computed
@@ -372,7 +408,7 @@ class CGPStore {
     if (this.allocationValid) {
       try {
         const stringAllocation = 'Allocation'
-        const all = new Allocation(convertAllocation(this.allocation)).toHex()
+        const all = new Allocation(convertZPtoPercentage(this.allocation)).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
         const message = Hash.compute(interval.toString().concat(all)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)

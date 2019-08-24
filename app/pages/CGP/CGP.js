@@ -95,22 +95,22 @@ class CGP extends Component {
 
   renderAllocationSuccessResponse() {
     const {
-      statusAllocation: { status },
+      allocationVoted, pastAllocation, snapshotBalanceAcc,
     } = this.props.cgpStore
-    return <SuccessResponse type="Allocation" hide={status !== 'success'} />
+    return <SuccessResponse type="Allocation" hide={!allocationVoted} message={`You voted for ${pastAllocation} Zp with ${snapshotBalanceAcc} `} />
   }
 
   renderPayoutSuccessResponse() {
     const {
-      statusPayout: { status },
+      payoutVoted, pastBallotId, snapshotBalanceAcc,
     } = this.props.cgpStore
-    return <SuccessResponse type="Payout" hide={status !== 'success'} />
+    return <SuccessResponse type="Payout" hide={!payoutVoted} message={`You voted for BallotId: ${pastBallotId} with ${snapshotBalanceAcc} `} />
   }
 
   render() {
     const {
       cgpStore: {
-        payoutValid, allocationValid, payoutHasData, snapshotBlock,
+        payoutValid, allocationValid, payoutHasData, snapshotBlock, allocationVoted, payoutVoted,
       },
       networkStore: { blocks: currentBlock },
     } = this.props
@@ -171,6 +171,7 @@ class CGP extends Component {
                       })}
                       disabled={this.state.inProgressAllocation || !allocationValid}
                       onClick={this.submitAllocationVote}
+                      hidden={allocationVoted}
                     >
                       {this.state.inProgressAllocation ? 'Voting' : 'Vote'}
                     </button>
@@ -193,6 +194,7 @@ class CGP extends Component {
                       className={cx('button-on-right', 'secondary')}
                       disabled={!payoutHasData || this.state.inProgressPayout}
                       onClick={this.resetPayoutForm}
+                      hidden={payoutVoted}
                     >
                       Reset
                     </button>
@@ -204,6 +206,7 @@ class CGP extends Component {
                         (payoutHasData && !payoutValid)
                       }
                       onClick={this.submitPayoutVote}
+                      hidden={payoutVoted}
                     >
                       {this.state.inProgressPayout ? 'Voting' : 'Vote'}
                     </button>
@@ -250,14 +253,21 @@ function SuccessResponse({ type, hide, message }) {
     return null
   }
   return (
-    <FormResponseMessage className="success">
-      <span>{type} vote was successfully broadcasted</span>
-      {message && (
-        <React.Fragment>
-          <span className="devider" />
-          <p>{message}</p>
-        </React.Fragment>
-      )}
-    </FormResponseMessage>
+    <Flexbox
+      flexGrow={2}
+      flexDirection="row"
+      className={cx('form-response-message', 'success')}
+    >
+      <FontAwesomeIcon icon={['far', 'check']} />
+      <Flexbox flexDirection="column">
+        <span> {type} vote was successfully broadcast</span>
+        {message && (
+          <React.Fragment>
+            <span className="devider" />
+            <p>{message}</p>
+          </React.Fragment>
+        )}
+      </Flexbox>
+    </Flexbox>
   )
 }

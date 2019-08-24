@@ -14,6 +14,8 @@ import BigInteger from 'bigi'
 import db from '../services/db'
 import { ZEN_ASSET_NAME, ZEN_ASSET_HASH } from '../constants'
 
+import { kalapasToZen } from './zenUtils'
+
 const savedContracts = db.get('savedContracts').value()
 
 export const isDev = () => process.env.NODE_ENV === 'development'
@@ -28,6 +30,8 @@ export const getAssetName = (asset: ?string) => {
   return ''
 }
 
+export const format = (balance) => (balance >= kalapasToZen(1) ? kalapasToZen(balance) : balance)
+
 export const truncateString = (string: ?string) => {
   if (string) {
     return string.length > 12
@@ -36,7 +40,10 @@ export const truncateString = (string: ?string) => {
   }
 }
 
-export const convertAllocation = (allocation: number): number => (Math.floor(allocation) / 50) * 100
+export const convertZPtoPercentage =
+  (allocation: number): number => (Math.floor(allocation) / 50) * 100
+
+export const convertPercentageToZP = (zp: number) => (50 * zp) / 100
 
 export const serialize = (data) => {
   const buffer = Buffer.alloc(data.getSize())
@@ -49,7 +56,7 @@ export const snapshotBalance = (transactions, snapshotBlock, headers) => {
   const dict = {}
   transactions
     .filter(t => headers - t.confirmations
-      >= Number(snapshotBlock))
+      <= Number(snapshotBlock))
     .map(t => {
       const { asset, amount } = t
       return { asset, balance: amount }
