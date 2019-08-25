@@ -7,7 +7,7 @@ import BigInteger from 'bigi'
 import { Data } from '@zen/zenjs'
 import { Hash } from '@zen/zenjs/build/src/Consensus/Types/Hash'
 import { Allocation } from '@zen/zenjs/build/src/Consensus/Types/Allocation'
-import { Payout } from '@zen/zenjs/build/src/Consensus/Types/Payout'
+import { Ballot } from '@zen/zenjs/build/src/Consensus/Types/Ballot'
 import { ContractId } from '@zen/zenjs/build/src/Consensus/Types/ContractId'
 import Address from '@zen/zenjs/build/src/Components/Wallet/Address'
 
@@ -183,6 +183,7 @@ class CGPStore {
     const transactions =
       await getContractHistory(this.networkStore.chain, this.contractIdVote, 0, 10000000)
     const tx = transactions.find(t => t.txHash === vote)
+    if (!tx) return
     const serialized = tx.messageBody.dict.find(txs => txs[0] === command)[1].string
     switch (command) {
       case 'Allocation':
@@ -360,10 +361,10 @@ class CGPStore {
   deserializeBallotIdOnChange() {
     if (checkBallot(this.ballotId)) {
       runInAction(() => {
-        // test for a valid ballot
         this.ballotIdValid = true
-        const { recipient, spends } = Payout.fromHex(this.ballotId)
-        this.ballotDeserialized = Payout.fromHex(this.ballotId)
+        const { data: payout } = Ballot.fromHex(this.ballotId)
+        const { recipient, spends } = payout
+        this.ballotDeserialized = payout
         this.address = Address.getPublicKeyHashAddress(
           this.networkStore.chainUnformatted,
           getAddress(recipient),
@@ -408,9 +409,10 @@ class CGPStore {
     if (this.allocationValid) {
       try {
         const stringAllocation = 'Allocation'
-        const all = new Allocation(convertZPtoPercentage(this.allocation)).toHex()
+        const all = new Allocation(convertZPtoPercentage(this.allocation))
+        const ballot = new Ballot(all).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-        const message = Hash.compute(interval.toString().concat(all)).bytes
+        const message = Hash.compute(interval.toString().concat(ballot)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
         const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
           const { publicKey, path } = item
@@ -424,7 +426,7 @@ class CGPStore {
         const data = await Promise.all(arrayPromise)
           .then(signatures =>
             new Data.Dictionary([
-              [stringAllocation, new Data.String(all)],
+              [stringAllocation, new Data.String(ballot)],
               ['Signature', new Data.Dictionary(signatures)],
             ]))
           .catch(error => console.log(error))
@@ -452,9 +454,10 @@ class CGPStore {
           this.networkStore.chainUnformatted,
           this.address,
           this.assetAmounts,
-        ).toHex()
+        )
+        const ballot = new Ballot(payout).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-        const message = Hash.compute(interval.toString().concat(payout)).bytes
+        const message = Hash.compute(interval.toString().concat(ballot)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
         const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
           const { publicKey, path } = item
@@ -468,7 +471,7 @@ class CGPStore {
         const data = await Promise.all(arrayPromise)
           .then(signatures =>
             new Data.Dictionary([
-              [stringPayout, new Data.String(payout)],
+              [stringPayout, new Data.String(ballot)],
               ['Signature', new Data.Dictionary(signatures)],
             ]))
           .catch(error => console.log(error))
