@@ -10,6 +10,7 @@ import { ContractId } from '@zen/zenjs/build//src/Consensus/Types/ContractId'
 import { Asset } from '@zen/zenjs/build/src/Consensus/Types/Asset'
 import { sha3_256 as sha } from 'js-sha3'
 import BigInteger from 'bigi'
+import { toJS } from 'mobx'
 
 import db from '../services/db'
 import { ZEN_ASSET_NAME, ZEN_ASSET_HASH } from '../constants'
@@ -86,9 +87,11 @@ export const isValidAddress = (address: ?string, chain?: Chain = 'test'): boolea
 }
 
 export const toSpend = (spends: { asset: string, amount: number }[]) =>
-  spends
-    .map((asset, amount) =>
-      new Spend(new Asset(asset.asset), new BigInteger(amount, 10, undefined)))
+  toJS(spends)
+    .map((spend) => {
+      const { asset, amount } = spend
+      return new Spend(new Asset(asset), amount)
+    })
 
 export const getAddress = (recipient: Recipient) => {
   switch (recipient.kind) {

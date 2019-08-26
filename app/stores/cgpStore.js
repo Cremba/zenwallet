@@ -412,7 +412,8 @@ class CGPStore {
         const all = new Allocation(convertZPtoPercentage(this.allocation))
         const ballot = new Ballot(all).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-        const message = Hash.compute(interval.toString().concat(ballot)).bytes
+        const ballotSerialized = Data.serialize(new Data.String(ballot))
+        const message = Hash.compute(interval.toString().concat(ballotSerialized)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
         const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
           const { publicKey, path } = item
@@ -457,7 +458,8 @@ class CGPStore {
         )
         const ballot = new Ballot(payout).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
-        const message = Hash.compute(interval.toString().concat(ballot)).bytes
+        const ballotSerialized = Data.serialize(new Data.String(ballot))
+        const message = Hash.compute(interval.toString().concat(ballotSerialized)).bytes
         await this.publicAddressStore.getKeys(confirmedPassword)
         const arrayPromise = toJS(this.publicAddressStore.publicKeys).map(async item => {
           const { publicKey, path } = item
