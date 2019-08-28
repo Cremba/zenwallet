@@ -20,7 +20,7 @@ class InfoBoxes extends Component {
         cgpCurrentZPBalance,
         cgpCurrentAllocation,
         prevIntervalTxs,
-        prevIntervalZpVotes,
+        prevIntervalZpVoted,
         snapshotBalanceAcc,
       },
       networkStore: { blocks: currentBlock },
@@ -74,7 +74,7 @@ class InfoBoxes extends Component {
 
         <BoxLabel
           firstLine="Past Semester (TXS / ZP Votes)"
-          secondLine={`${prevIntervalTxs} / ${prevIntervalZpVotes}`}
+          secondLine={`${prevIntervalTxs} / ${prevIntervalZpVoted}`}
           className="magnify"
         />
       </Flexbox>

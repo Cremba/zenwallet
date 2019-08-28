@@ -7,7 +7,6 @@ import { MAINNET } from '../constants/constants'
 
 import dataBlock from './firstBlock.json'
 
-
 const crowdsaleServerAddress = getCrowdsaleServerAddress()
 
 type Hash = string;
@@ -22,35 +21,113 @@ export async function getBalances(): Promise<Asset[]> {
   return response.data
 }
 const mainnetBlockExplorer = axios.create({
-  baseURL: 'https://zp.io/api/votes/',
+  baseURL: 'https://zp.io/',
   headers: { 'Access-Control-Allow-Origin': '*' },
-
 })
 
 const testnetBlockExplorer = axios.create({
-  baseURL: 'https://testnet.zp.io/api/votes/',
+  baseURL: 'https://testnet.zp.io/',
   headers: { 'Access-Control-Allow-Origin': '*' },
 })
+
+const getBE = chain => (chain === MAINNET ? mainnetBlockExplorer : testnetBlockExplorer)
 
 export async function getCgp(): Promise {
   const response = await axios.get(`${getServerAddress()}/blockchain/cgp`)
   return response.data
 }
 
-export async function getCgpHistory(): Promise {
-  const response = await axios.get(`${getServerAddress()}/blockchain/cgp/history`)
+export async function getCgpHistory({ interval } = {}): Promise {
+  const params = interval ? { interval } : {}
+  const response = await axios.get(`${getServerAddress()}/blockchain/cgp/history`, { params })
   return response.data
 }
 
-const getBE = (chain) => (chain === MAINNET ? mainnetBlockExplorer : testnetBlockExplorer)
+export async function getCgpVotesFromExplorer({
+  chain,
+  type,
+  interval,
+  page = 0,
+  pageSize = 1,
+} = {}) {
+  const response = await getBE(chain).get(`api/cgp/votes/${type}`, {
+    params: {
+      interval,
+      page,
+      pageSize,
+    },
+  })
+  return response.data
+}
+
+export async function getCgpResultsFromExplorer({
+  chain,
+  type,
+  interval,
+  page = 0,
+  pageSize = 1,
+} = {}) {
+  const response = await getBE(chain).get(`api/cgp/results/${type}`, {
+    params: {
+      interval,
+      page,
+      pageSize,
+    },
+  })
+  return response.data
+}
+
+export async function getCgpParticipatedZpFromExplorer({ chain, type, interval } = {}) {
+  const response = await getBE(chain).get(`api/cgp/participatedZp/${type}`, {
+    params: {
+      interval,
+    },
+  })
+  return response.data
+}
+
+export async function getCgpPopularBallotsFromExplorer({
+  chain,
+  type = 'payout',
+  page = 0,
+  pageSize = 5,
+} = {}) {
+  const response = await getBE(chain).get(`api/cgp/ballots/${type}`, {
+    params: {
+      page,
+      pageSize,
+    },
+  })
+  return response.data
+}
+
+export async function getCgpVotesCount(chain, interval) {
+  const [responsePayout, responseAllocation] = await Promise.all([
+    getBE(chain).get('api/cgp/votes/payout', {
+      params: {
+        interval,
+        page: 0,
+        pageSize: 1,
+      },
+    }),
+    getBE(chain).get('api/cgp/votes/allocation', {
+      params: {
+        interval,
+        page: 0,
+        pageSize: 1,
+      },
+    }),
+  ])
+  return responsePayout.data.data.count + responseAllocation.data.data.count
+}
 
 export async function getCurrentInterval(chain) {
-  const response = await getBE(chain).get('relevant')
+  const response = await getBE(chain).get('api/votes/relevant')
   return response.data.data
 }
 
 export async function getNextInterval(chain) {
-  const response = await getBE(chain).get('next')
+  const response = await getBE(chain).get('api/votes/next')
   return response.data.data
 }
 
@@ -75,11 +152,13 @@ export async function postTransaction(tx: Transaction & Password): Promise<strin
     password, to, asset, amount,
   } = tx
   const data = {
-    outputs: [{
-      asset,
-      address: to,
-      amount,
-    }],
+    outputs: [
+      {
+        asset,
+        address: to,
+        amount,
+      },
+    ],
     password,
   }
 
@@ -91,8 +170,8 @@ export async function postTransaction(tx: Transaction & Password): Promise<strin
 }
 
 type WalletKey = {
-  "publicKey": string,
-  "path": string
+  publicKey: string,
+  path: string
 };
 export async function postWalletKeys(password: Password): Promise<WalletKey[]> {
   const data = { password }
@@ -103,13 +182,11 @@ export async function postWalletKeys(password: Password): Promise<WalletKey[]> {
 }
 
 type Sign = {
-  "message": string,
-  "path": string
+  message: string,
+  path: string
 };
 export async function postSign(sign: Sign & Password): Promise<string> {
-  const {
-    password, message, path,
-  } = sign
+  const { password, message, path } = sign
   const data = {
     message,
     path,
@@ -127,11 +204,13 @@ export async function postRawTransaction(tx: Transaction & Password): Promise<st
     password, to, asset, amount,
   } = tx
   const data = {
-    outputs: [{
-      asset,
-      address: to,
-      amount,
-    }],
+    outputs: [
+      {
+        asset,
+        address: to,
+        amount,
+      },
+    ],
     password,
   }
 
@@ -159,7 +238,7 @@ type RunContractPayload = {
   },
   command?: string,
   messageBody?: string,
-  spends?: Array<{asset: Hash, amount: number}>
+  spends?: Array<{ asset: Hash, amount: number }>
 };
 export async function postRunContract(data: RunContractPayload & Password) {
   const response = await axios.post(`${getServerAddress()}/wallet/contract/execute`, data, {
@@ -199,9 +278,12 @@ export type TransactionResponse = {
 export async function getTxHistory({
   skip, take,
 }: TransactionRequest = {}): Promise<TransactionResponse[]> {
-  const response = await axios.get(`${getServerAddress()}/wallet/transactions?skip=${skip}&take=${take}`, {
-    headers: { 'Content-Type': 'application/json' },
-  })
+  const response = await axios.get(
+    `${getServerAddress()}/wallet/transactions?skip=${skip}&take=${take}`,
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
   return response.data
 }
 

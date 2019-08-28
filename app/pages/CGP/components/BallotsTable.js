@@ -4,7 +4,6 @@ import { inject, observer } from 'mobx-react'
 import Flexbox from 'flexbox-react'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
-// import OnScrollBottom from '../../../../../components/OnScrollBottom'
 import CgpStore from '../../../stores/cgpStore'
 import { truncateString } from '../../../utils/helpers'
 
@@ -20,7 +19,7 @@ class BallotsTable extends Component<Props> {
   }
   renderRows() {
     const { popularBallots } = this.props.cgpStore
-    return popularBallots.map(ballot => (
+    return popularBallots.items.map(ballot => (
       <Fragment key={`${ballot.id}`}>
         <tr onClick={this.ballotIdClickHandler} data-value={ballot.id} className="ballot-row">
           <td>
@@ -46,7 +45,7 @@ class BallotsTable extends Component<Props> {
     )
   }
   render() {
-    // const { fetchBallots } = this.props.cgpStore
+    const { fetchPopularBallots, popularBallots } = this.props.cgpStore
     return (
       <div>
         <Flexbox>
@@ -61,7 +60,11 @@ class BallotsTable extends Component<Props> {
             <tbody>{this.renderRows()}</tbody>
           </table>
         </Flexbox>
-        {/* <OnScrollBottom onScrollBottom={txHistoryStore.fetch} /> */}
+        {popularBallots.count > 0 && (
+          <button className="btn-link" onClick={fetchPopularBallots.bind(this.props.cgpStore)}>
+            Load more
+          </button>
+        )}
       </div>
     )
   }

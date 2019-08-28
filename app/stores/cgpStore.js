@@ -20,11 +20,17 @@ import {
   toPayout,
   checkBallot,
   getAddress,
-  snapshotBalance, format, convertPercentageToZP,
+  snapshotBalance,
+  format,
+  convertPercentageToZP,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
 import {
   getCgp,
+  getCgpHistory,
+  getCgpVotesFromExplorer,
+  getCgpParticipatedZpFromExplorer,
+  getCgpPopularBallotsFromExplorer,
   getContractBalance,
   getContractHistory,
   getContractTXHistory,
@@ -38,14 +44,6 @@ class CGPStore {
     this.txHistoryStore = txHistoryStore
     this.authorizedProtocolStore = authStore
     this.runContractStore = runStore
-
-    autorun(() => {
-      // calculate the min max based on the current block
-      // if the block changes to a new interval those values should change
-      if (this.networkStore.blocks > 1) {
-        this.calculateAllocationMinMax()
-      }
-    })
 
     autorun(() => {
       if (this.ballotId) {
@@ -66,12 +64,11 @@ class CGPStore {
   @observable cgpCurrentBalance = 0
   @observable cgpCurrentZPBalance = 0
   @observable cgpCurrentAllocation = 0
+  @observable cgpPrevAllocation = null
   @observable cgpCurrentPayout = 0
   @observable prevIntervalTxs = 0
-  @observable prevIntervalZpVotes = 0
+  @observable prevIntervalZpVoted = 0
   @observable allocation = 0
-  @observable allocationZpMin = 0
-  @observable allocationZpMax = 15
   @observable ballotId = ''
   @observable ballotDeserialized = {}
   @observable ballotIdValid = false
@@ -79,26 +76,11 @@ class CGPStore {
   @observable payoutVoted = false
   @observable pastAllocation = 0
   @observable pastBallotId = ''
-  // TODO DEMO - replace with real data
-  @observable popularBallots = [
-    { id: '123456789', zpVoted: 50 },
-    { id: 'fliocshdicsh', zpVoted: 50 },
-    { id: 'shdjsdj', zpVoted: 50 },
-    { id: 'wiuoiwuroewuroiew', zpVoted: 50 },
-    { id: 'ldkfjlsdkfsjd', zpVoted: 50 },
-    { id: 'eueeeeeeeeeeee', zpVoted: 50 },
-    { id: '0000000000000000', zpVoted: 50 },
-    { id: 'lllllllllllllllll', zpVoted: 50 },
-    { id: 'saruiureiwiruiwuiri', zpVoted: 50 },
-    { id: 'popopopoopopo', zpVoted: 50 },
-    { id: '22222222333333333333', zpVoted: 50 },
-    { id: 'llllllllllll', zpVoted: 50 },
-    { id: 'xlsdosddsfoid', zpVoted: 50 },
-    { id: 'pqpqpqpqwq', zpVoted: 50 },
-    { id: 'd9dfeif9eeefe', zpVoted: 50 },
-    { id: 'lkdsuiuouo', zpVoted: 50 },
-    { id: 'iueiwuieuwiueiwuieuiwuieiwiwueiuwiueiw', zpVoted: 50 },
-  ]
+  @observable popularBallots = { count: 0, items: [] }
+  @observable popularBallotsCurrentAmount = 10
+  @observable fetching = {
+    popularBallots: false,
+  }
   @observable address = ''
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
@@ -122,11 +104,6 @@ class CGPStore {
     )
   }
 
-  calculateAllocationMinMax() {
-    // TODO call blockchain/cgp/current and calculate the min/max zp/ratio
-    // min and max should be toFixed(3)
-  }
-
   getBalanceFor(asset) {
     const result = find(this.assets, { asset })
     return result ? result.balance : 0
@@ -134,21 +111,38 @@ class CGPStore {
 
   @action
   async fetch() {
-    return Promise.all([this.fetchCgp(), this.fetchAssets()])
+    return Promise.all([
+      this.fetchCgp(),
+      this.fetchAssets(),
+      this.fetchPrevIntervalVoteCount(),
+      this.fetchPrevIntervalAmountOfZpVoted(),
+      (() => {
+        if (this.popularBallots.items.length === 0) {
+          return this.fetchPopularBallots()
+        }
+      })(),
+    ])
   }
 
   @action
   async fetchCgp() {
-    // TODO - get history too
-    // const [cgpCurrent, cgpHistory] = await Promise.all([getCgp(), getCgpHistory()])
-    const cgpCurrent = await getCgp()
+    const [cgpCurrent, cgpPrev] = await Promise.all([
+      getCgp(),
+      this.currentInterval > 1 ? getCgpHistory({ interval: this.currentInterval - 1 }) : [],
+    ])
     runInAction(() => {
       this.cgpCurrentAllocation = cgpCurrent.allocation
       this.cgpCurrentPayout = cgpCurrent.payout
-      // todo get info from cgpHistory
+      if (cgpPrev.length) {
+        this.cgpPrevAllocation = cgpPrev[0].allocation
+      }
     })
-    const balance =
-      await getContractBalance(this.networkStore.chainUnformatted, this.addressCGP, 0, 100000)
+    const balance = await getContractBalance(
+      this.networkStore.chainUnformatted,
+      this.addressCGP,
+      0,
+      100000,
+    )
     runInAction(() => {
       const filtered = balance.filter(data => data.asset === '00')[0].balance
       this.cgpCurrentZPBalance = format(filtered)
@@ -157,16 +151,69 @@ class CGPStore {
   }
 
   @action
+  async fetchPrevIntervalVoteCount() {
+    if (this.currentInterval > 1) {
+      const [responsePayout, responseAllocation] = await Promise.all([
+        getCgpVotesFromExplorer({
+          chain: this.networkStore.chain,
+          interval: this.currentInterval - 1,
+          type: 'payout',
+        }),
+        getCgpVotesFromExplorer({
+          chain: this.networkStore.chain,
+          interval: this.currentInterval - 1,
+          type: 'allocation',
+        }),
+      ])
+      runInAction(() => {
+        if (responsePayout.success && responseAllocation.success) {
+          this.prevIntervalTxs = responsePayout.data.count + responseAllocation.data.count
+        }
+      })
+    }
+  }
+
+  @action
+  async fetchPrevIntervalAmountOfZpVoted() {
+    if (this.currentInterval > 1) {
+      const [responsePayout, responseAllocation] = await Promise.all([
+        getCgpParticipatedZpFromExplorer({
+          chain: this.networkStore.chain,
+          interval: this.currentInterval - 1,
+          type: 'payout',
+        }),
+        getCgpParticipatedZpFromExplorer({
+          chain: this.networkStore.chain,
+          interval: this.currentInterval - 1,
+          type: 'allocation',
+        }),
+      ])
+
+      runInAction(() => {
+        if (responsePayout.success && responseAllocation.success) {
+          this.prevIntervalZpVoted = Decimal.add(
+            responsePayout.data,
+            responseAllocation.data,
+          ).toNumber()
+        }
+      })
+    }
+  }
+
+  @action
   async getVote(command, snapshotBlock) {
     await this.txHistoryStore.fetch()
     const internalTx = this.txHistoryStore.transactions.map(t => t.txHash)
-    const transactions =
-      await getContractHistory(this.networkStore.chain, this.contractIdVote, 0, 10000000)
+    const transactions = await getContractHistory(
+      this.networkStore.chain,
+      this.contractIdVote,
+      0,
+      10000000,
+    )
     if (isEmpty(this.txHistoryStore.transactions) || isEmpty(transactions)) return []
     const tx = transactions
       .filter(t => t.command === command)
-      .filter(t => this.networkStore.headers - t.confirmations
-        >= Number(snapshotBlock))
+      .filter(t => this.networkStore.headers - t.confirmations >= Number(snapshotBlock))
       .map(t => t.txHash)
       .filter(e => internalTx.includes(e))
     return tx
@@ -180,8 +227,12 @@ class CGPStore {
   async voted(command, snapshotBlock) {
     const votes = await this.getVote(command, snapshotBlock)
     const vote = votes[0]
-    const transactions =
-      await getContractHistory(this.networkStore.chain, this.contractIdVote, 0, 10000000)
+    const transactions = await getContractHistory(
+      this.networkStore.chain,
+      this.contractIdVote,
+      0,
+      10000000,
+    )
     const tx = transactions.find(t => t.txHash === vote)
     if (!tx) return
     const serialized = tx.messageBody.dict.find(txs => txs[0] === command)[1].string
@@ -217,6 +268,33 @@ class CGPStore {
         .replace(snapshotBalance(transactions, this.snapshotBlock, this.networkStore.blocks)))
   }
 
+  @action
+  async fetchPopularBallots() {
+    if (
+      this.fetching.popularBallots ||
+      (this.popularBallots.items.length &&
+        this.popularBallots.items.length >= this.popularBallots.count)
+    ) {
+      return
+    }
+
+    this.fetching.popularBallots = true
+    const response = await getCgpPopularBallotsFromExplorer({
+      chain: this.networkStore.chain,
+      type: 'payout',
+      pageSize: this.popularBallotsCurrentAmount,
+      page: 0,
+    })
+    runInAction(() => {
+      if (response.success) {
+        this.popularBallots.count = response.data.count
+        this.popularBallots.items.replace(response.data.items)
+        this.popularBallotsCurrentAmount += 10
+      }
+      this.fetching.popularBallots = false
+    })
+  }
+
   @computed
   get assets() {
     return this.assetCGP.map(asset => ({
@@ -247,13 +325,14 @@ class CGPStore {
 
   @computed
   get isVotingInterval() {
-    return this.snapshotBlock <= this.networkStore.headers
-      && this.networkStore.headers > this.tallyBlock
+    return (
+      this.networkStore.headers > this.snapshotBlock && this.networkStore.headers <= this.tallyBlock
+    )
   }
 
   @computed
   get currentInterval() {
-    return Math.ceil(this.networkStore.blocks / this.intervalLength)
+    return Math.ceil(this.networkStore.headers / this.intervalLength)
   }
 
   @computed
@@ -264,6 +343,20 @@ class CGPStore {
   @computed
   get tallyBlock() {
     return this.currentInterval * this.intervalLength
+  }
+
+  @computed
+  get allocationZpMin() {
+    if (this.cgpPrevAllocation === null) return 0
+    const minerAmount = 50 - convertPercentageToZP(this.cgpPrevAllocation)
+    return minerAmount * 0.85
+  }
+
+  @computed
+  get allocationZpMax() {
+    if (this.cgpPrevAllocation === null) return 7.5
+    const minerAmount = 50 - convertPercentageToZP(this.cgpPrevAllocation)
+    return minerAmount / 0.85
   }
 
   @computed
@@ -451,11 +544,7 @@ class CGPStore {
     if (this.payoutValid) {
       try {
         const stringPayout = 'Payout'
-        const payout = toPayout(
-          this.networkStore.chainUnformatted,
-          this.address,
-          this.assetAmounts,
-        )
+        const payout = toPayout(this.networkStore.chainUnformatted, this.address, this.assetAmounts)
         const ballot = new Ballot(payout).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
         const ballotSerialized = Data.serialize(new Data.String(ballot))

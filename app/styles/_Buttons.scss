@@ -1,3 +1,5 @@
+@import "styles/Variables";
+
 .swal-button, button, .button, {
   height: 36px;
   min-width: 120px;
@@ -70,6 +72,16 @@ button {
     top: -1px;
   }
 
+  &.btn-link {
+    padding: 0px 0px;
+    background-color: transparent;
+    border: none;
+    min-width: 0;
+    color: $blue;
+    &:hover {
+      color: $blue-focus;
+    }
+  }
 }
 
 .btn-block { width: 100%; }
