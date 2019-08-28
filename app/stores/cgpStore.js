@@ -103,7 +103,7 @@ class CGPStore {
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
-  contractIdCgp = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
+  contractIdCgp = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
   contractIdVote = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
 
   @computed
@@ -253,17 +253,17 @@ class CGPStore {
 
   @computed
   get currentInterval() {
-    return Math.floor((this.networkStore.blocks - 1) / this.intervalLength)
+    return Math.ceil(this.networkStore.blocks / this.intervalLength)
   }
 
   @computed
   get snapshotBlock() {
-    return this.currentInterval * this.intervalLength + this.intervalLength * 0.9
+    return (this.currentInterval - 1) * this.intervalLength + this.intervalLength * 0.9
   }
 
   @computed
   get tallyBlock() {
-    return (this.currentInterval + 1) * this.intervalLength
+    return this.currentInterval * this.intervalLength
   }
 
   @computed
