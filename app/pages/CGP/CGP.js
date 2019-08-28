@@ -7,6 +7,7 @@ import { inject, observer } from 'mobx-react'
 import cx from 'classnames'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
+import { truncateString } from '../../utils/helpers'
 import Layout from '../../components/Layout'
 // import Loading from '../../components/Loading'
 // import IsValidIcon from '../../components/IsValidIcon'
@@ -94,23 +95,36 @@ class CGP extends Component {
   }
 
   renderAllocationSuccessResponse() {
-    const {
-      allocationVoted, pastAllocation, snapshotBalanceAcc,
-    } = this.props.cgpStore
-    return <SuccessResponse type="Allocation" hide={!allocationVoted} message={`You voted for ${pastAllocation} Zp with ${snapshotBalanceAcc} `} />
+    const { allocationVoted, pastAllocation, snapshotBalanceAcc } = this.props.cgpStore
+    return (
+      <SuccessResponse
+        type="Allocation"
+        hide={!allocationVoted}
+        message={`You voted for ${pastAllocation} Zp with ${snapshotBalanceAcc} `}
+      />
+    )
   }
 
   renderPayoutSuccessResponse() {
-    const {
-      payoutVoted, pastBallotId, snapshotBalanceAcc,
-    } = this.props.cgpStore
-    return <SuccessResponse type="Payout" hide={!payoutVoted} message={`You voted for BallotId: ${pastBallotId} with ${snapshotBalanceAcc} `} />
+    const { payoutVoted, pastBallotId, snapshotBalanceAcc } = this.props.cgpStore
+    return (
+      <SuccessResponse
+        type="Payout"
+        hide={!payoutVoted}
+        message={`You voted for BallotId: ${truncateString(pastBallotId)} with ${snapshotBalanceAcc} `}
+      />
+    )
   }
 
   render() {
     const {
       cgpStore: {
-        payoutValid, allocationValid, payoutHasData, snapshotBlock, allocationVoted, payoutVoted,
+        payoutValid,
+        allocationValid,
+        payoutHasData,
+        snapshotBlock,
+        allocationVoted,
+        payoutVoted,
       },
       networkStore: { blocks: currentBlock },
     } = this.props
@@ -215,7 +229,7 @@ class CGP extends Component {
               </Flexbox>
               <Flexbox className="form-container ballot-table-container">
                 <section>
-                  <Flexbox flexDirection="column" >
+                  <Flexbox flexDirection="column">
                     <div className="section-title">
                       <h1>Popular Ballots</h1>
                     </div>
@@ -253,11 +267,7 @@ function SuccessResponse({ type, hide, message }) {
     return null
   }
   return (
-    <Flexbox
-      flexGrow={2}
-      flexDirection="row"
-      className={cx('form-response-message', 'success')}
-    >
+    <Flexbox flexGrow={2} flexDirection="row" className={cx('form-response-message', 'success')}>
       <FontAwesomeIcon icon={['far', 'check']} />
       <Flexbox flexDirection="column">
         <span> {type} vote was successfully broadcast</span>
