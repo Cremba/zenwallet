@@ -13,7 +13,7 @@ class AllocationForm extends Component {
   allocationChangeHandler = value => this.props.cgpStore.updateAllocation(value)
   formatRangeLabels = (value, type) => (
     <span className={cx(type, { 'above-middle': value > 25 })}>
-      {value.toFixed(3)} {type !== 'value' ? 'ZP' : ''}
+      {value.toFixed(2)} {type !== 'value' ? 'ZP' : ''}
     </span>
   )
   render() {

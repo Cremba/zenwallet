@@ -348,15 +348,15 @@ class CGPStore {
   @computed
   get allocationZpMin() {
     if (this.cgpPrevAllocation === null) return 0
-    const minerAmount = 50 - convertPercentageToZP(this.cgpPrevAllocation)
-    return minerAmount * 0.85
+    const minerAmount = convertPercentageToZP(this.cgpPrevAllocation)
+    return minerAmount / 0.85
   }
 
   @computed
   get allocationZpMax() {
     if (this.cgpPrevAllocation === null) return 7.5
     const minerAmount = 50 - convertPercentageToZP(this.cgpPrevAllocation)
-    return minerAmount / 0.85
+    return minerAmount * 0.15
   }
 
   @computed
@@ -538,7 +538,7 @@ class CGPStore {
       }
     }
   }
-
+aw
   @action
   submitPayoutVote = async (confirmedPassword: string) => {
     if (this.payoutValid) {
