@@ -29,12 +29,10 @@ class AuthorizedProtocolStore {
     this.publicAddressStore = publicAddressStore
     this.networkStore = networkStore
     this.txHistoryStore = txHistoryStore
-    this.txHistoryStore.snapshotBlock = this.snapshotBlock
   }
 
   async getSnapshotBalance() {
-    this.txHistoryStore.snapshotBlock = this.snapshotBlock
-    this.snapshotBalance = await this.txHistoryStore.fetchSnapshot()
+    this.snapshotBalance = await this.txHistoryStore.fetchSnapshot(this.snapshotBlock)
   }
 
   @action.bound
@@ -63,7 +61,7 @@ class AuthorizedProtocolStore {
     if (isEmpty(this.txHistoryStore.transactions)) return false
     const tx = transactions
       .filter(t => this.networkStore.headers - t.confirmations
-        >= Number(this.txHistoryStore.snapshotBlock))
+        >= Number(this.snapshotBlock))
       .map(t => t.txHash)
       .filter(e => internalTx.includes(e))
     if (tx) {

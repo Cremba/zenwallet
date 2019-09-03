@@ -7,8 +7,9 @@ import Flexbox from 'flexbox-react'
 import { inject, observer } from 'mobx-react'
 
 import BoxLabel from '../../../components/BoxLabel'
+import { kalapasToZen } from '../../../utils/zenUtils'
 
-@inject('cgpStore', 'networkStore')
+@inject('cgpStore', 'networkStore', 'portfolioStore')
 @observer
 class InfoBoxes extends Component {
   render() {
@@ -16,10 +17,11 @@ class InfoBoxes extends Component {
       cgpStore: {
         snapshotBlock,
         tallyBlock,
-        cgpCurrentBalance,
+        cgpCurrentZPBalance,
         cgpCurrentAllocation,
         prevIntervalTxs,
         prevIntervalZpVotes,
+        snapshotBalanceAcc,
       },
       networkStore: { blocks: currentBlock },
     } = this.props
@@ -28,6 +30,20 @@ class InfoBoxes extends Component {
 
     return (
       <Flexbox flexDirection="row">
+
+        {isDuringVote ? (
+          <BoxLabel
+            firstLine="Vote Weight Balance"
+            secondLine={`${kalapasToZen(snapshotBalanceAcc)} ZP`}
+            className="magnify"
+          />
+        ) : (
+          <BoxLabel
+            firstLine="Potential Vote Weight Balance"
+            secondLine={`${this.props.portfolioStore.zenDisplay} ZP`}
+            className="magnify"
+          />
+        )}
         {isDuringVote ? (
           <BoxLabel
             firstLine="Current Block / Tally Block"
@@ -45,13 +61,13 @@ class InfoBoxes extends Component {
         {isDuringVote ? (
           <BoxLabel
             firstLine="CGP Current Allocation / ZP Balance"
-            secondLine={`${cgpCurrentAllocation} / ${cgpCurrentBalance}`}
+            secondLine={`${cgpCurrentAllocation} / ${cgpCurrentZPBalance}`}
             className="magnify"
           />
         ) : (
           <BoxLabel
             firstLine="CGP Current Balance"
-            secondLine={String(cgpCurrentBalance)}
+            secondLine={String(cgpCurrentZPBalance)}
             className="magnify"
           />
         )}

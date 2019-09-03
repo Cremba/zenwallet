@@ -13,7 +13,7 @@ import { Data } from '@zen/zenjs'
 import AuthorizedProtocolStore from '../../stores/authorizedProtocolStore'
 import PublicAddressStore from '../../stores/publicAddressStore'
 import RunContractStore from '../../stores/runContractStore'
-import { isValidHex, hashVoteData, payloadData } from '../../utils/helpers'
+import { isValidHex, hashVoteData, payloadData, format } from '../../utils/helpers'
 import { ref } from '../../utils/domUtils'
 import Layout from '../../components/Layout'
 import Loading from '../../components/Loading'
@@ -22,7 +22,6 @@ import ProtectedButton from '../../components/Buttons'
 import FormResponseMessage from '../../components/FormResponseMessage'
 import ExternalLink from '../../components/ExternalLink'
 import { kalapasToZen } from '../../utils/zenUtils'
-import TxHistoryStore from '../../stores/txHistoryStore'
 import { MAINNET } from '../../constants'
 import NetworkStore from '../../stores/networkStore'
 import BoxLabel from '../../components/BoxLabel/BoxLabel'
@@ -33,7 +32,6 @@ type Props = {
   authorizedProtocolStore: AuthorizedProtocolStore,
   publicAddressStore: PublicAddressStore,
   runContractStore: RunContractStore,
-  txHistoryStore: TxHistoryStore,
   networkStore: NetworkStore,
   portfolioStore: PortfolioStore
 };
@@ -45,7 +43,7 @@ type State = {
   zeroBalance: boolean
 };
 
-@inject('txHistoryStore', 'authorizedProtocolStore', 'publicAddressStore', 'runContractStore', 'networkStore', 'portfolioStore')
+@inject('authorizedProtocolStore', 'publicAddressStore', 'runContractStore', 'networkStore', 'portfolioStore')
 @observer
 class AuthorizedProtocol extends Component<Props, State> {
   state = {
@@ -90,9 +88,7 @@ class AuthorizedProtocol extends Component<Props, State> {
       )
     }
   }
-  format(balance) {
-    return balance >= kalapasToZen(1) ? kalapasToZen(balance) : balance
-  }
+
 
   renderSuccessResponse() {
     if (this.state.isTally) return null
@@ -116,7 +112,7 @@ class AuthorizedProtocol extends Component<Props, State> {
           <span className="devider" />
           <p> You voted for commit ID {vote} with { '  ' }
             {this.props.authorizedProtocolStore.snapshotBalance ?
-            this.format(this.props.authorizedProtocolStore.snapshotBalance) : 0} ZP { '  ' }
+            format(this.props.authorizedProtocolStore.snapshotBalance) : 0} ZP { '  ' }
             , see more details
             <ExternalLink link={`https://${this.getLink}zp.io/governance`} > here</ExternalLink>
           </p>
@@ -266,7 +262,7 @@ class AuthorizedProtocol extends Component<Props, State> {
             <br />
           </h3>
           <Flexbox flexDirection="row" className="box-bar">
-            { !this.state.isTally && <BoxLabel secondLine={this.props.txHistoryStore.snapshotBlock} firstLine="Snapshot Block" />}
+            { !this.state.isTally && <BoxLabel secondLine={this.props.authorizedProtocolStore.snapshotBlock} firstLine="Snapshot Block" />}
             { this.state.isSnapshot && !this.state.isTally && <BoxLabel secondLine={this.props.authorizedProtocolStore.tallyBlock} firstLine="Tally block" />}
             { !this.state.isSnapshot && <BoxLabel secondLine={`${this.props.portfolioStore.zenDisplay} ZP `} firstLine="Potential Vote Weight" />}
             { !this.state.zeroBalance && this.state.isSnapshot && !this.state.isTally && <BoxLabel secondLine={`${kalapasToZen(this.props.authorizedProtocolStore.snapshotBalance)} ZP`} firstLine="ZP balance at Snapshot" />}

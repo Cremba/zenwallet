@@ -1,7 +1,7 @@
 /* eslint-disable no-mixed-operators */
 // @flow
 import { observable, action, autorun, reaction, computed, runInAction, toJS } from 'mobx'
-import { last, findIndex, keys, find, isEqual } from 'lodash'
+import { last, findIndex, keys, find, isEqual, isEmpty } from 'lodash'
 import { Decimal } from 'decimal.js'
 import BigInteger from 'bigi'
 import { Data } from '@zen/zenjs'
@@ -20,10 +20,15 @@ import {
   toPayout,
   checkBallot,
   getAddress,
-  snapshotBalance,
+  snapshotBalance, format,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
-import { getCgp, getContractTXHistory } from '../services/api-service'
+import {
+  getCgp,
+  getContractBalance,
+  getContractHistory,
+  getContractTXHistory
+} from '../services/api-service'
 
 class CGPStore {
   constructor(publicStore, networkStore, txHistoryStore, portfolioStore, authStore, runStore) {
@@ -56,19 +61,22 @@ class CGPStore {
       () => this.removeBallotIdOnDetailsChange(),
     )
   }
-
+  @observable snapshotBalanceAcc = 0
   @observable assetCGP = []
   @observable cgpCurrentBalance = 0
+  @observable cgpCurrentZPBalance = 0
   @observable cgpCurrentAllocation = 0
   @observable cgpCurrentPayout = 0
   @observable prevIntervalTxs = 0
   @observable prevIntervalZpVotes = 0
   @observable allocation = 0
   @observable allocationZpMin = 0
-  @observable allocationZpMax = 50
+  @observable allocationZpMax = 15
   @observable ballotId = ''
   @observable ballotDeserialized = {}
   @observable ballotIdValid = false
+  @observable allocationVote = false
+  @observable payoutVote = false
   // TODO DEMO - replace with real data
   @observable popularBallots = [
     { id: '123456789', zpVoted: 50 },
@@ -137,10 +145,36 @@ class CGPStore {
       this.cgpCurrentPayout = cgpCurrent.payout
       // todo get info from cgpHistory
     })
+    const balance =
+      await getContractBalance(this.networkStore.chainUnformatted,this.addressCGP, 0, 100000)
+    runInAction(() => {
+      const filtered = balance.filter(data => data.asset === '00')[0].balance
+      this.cgpCurrentZPBalance = format(filtered)
+      this.cgpCurrentBalance = balance
+    })
+  }
+
+
+  async getVote(command, snapshotBlock) {
+    await this.txHistoryStore.fetch()
+    const internalTx = this.txHistoryStore.transactions.map(t => t.txHash)
+    const transactions =
+      await getContractHistory(this.networkStore.chain, this.contractIdVote, 0, 10000000)
+    if (isEmpty(this.txHistoryStore.transactions)) return false
+    const tx = transactions
+      .filter(t => t.command === command)
+      .filter(t => this.networkStore.headers - t.confirmations
+        >= Number(snapshotBlock))
+      .map(t => t.txHash)
+      .filter(e => internalTx.includes(e))
+    return !isEmpty(tx)
   }
 
   @action
   async fetchAssets() {
+    this.allocationVote = await this.getVote('Allocation', this.snapshotBlock)
+    this.payoutVote = await this.getVote('Payout', this.snapshotBlock)
+    this.snapshotBalanceAcc = await this.txHistoryStore.fetchSnapshot(this.snapshotBlock)
     const transactions = await getContractTXHistory(
       this.networkStore.chain,
       this.addressCGP,
