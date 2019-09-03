@@ -7,7 +7,8 @@ import Flexbox from 'flexbox-react'
 import { inject, observer } from 'mobx-react'
 
 import BoxLabel from '../../../components/BoxLabel'
-import { kalapasToZen } from '../../../utils/zenUtils'
+import { kalapasToZen, isZenAsset } from '../../../utils/zenUtils'
+import { truncateString, getAssetName } from '../../../utils/helpers'
 
 @inject('cgpStore', 'networkStore', 'portfolioStore')
 @observer
@@ -18,6 +19,7 @@ class InfoBoxes extends Component {
         snapshotBlock,
         tallyBlock,
         cgpCurrentZPBalance,
+        assets,
         cgpCurrentAllocation,
         prevIntervalTxs,
         prevIntervalZpVoted,
@@ -28,9 +30,13 @@ class InfoBoxes extends Component {
 
     const isDuringVote = currentBlock > snapshotBlock
 
+    const allAssetsString = assets.reduce((all, cur) => {
+      const currentDisplay = `${cur.name}: ${cur.balanceDisplay}`
+      return !all ? currentDisplay : `${all}\n${currentDisplay}`
+    }, [])
+
     return (
       <Flexbox flexDirection="row">
-
         {isDuringVote ? (
           <BoxLabel
             firstLine="Vote Weight Balance"
@@ -60,6 +66,7 @@ class InfoBoxes extends Component {
 
         {isDuringVote ? (
           <BoxLabel
+            title={allAssetsString}
             firstLine="CGP Current Allocation / ZP Balance"
             secondLine={`${cgpCurrentAllocation} / ${cgpCurrentZPBalance}`}
             className="magnify"
