@@ -7,8 +7,8 @@ import Flexbox from 'flexbox-react'
 import { inject, observer } from 'mobx-react'
 
 import BoxLabel from '../../../components/BoxLabel'
-import { kalapasToZen, isZenAsset } from '../../../utils/zenUtils'
-import { truncateString, getAssetName } from '../../../utils/helpers'
+import { kalapasToZen } from '../../../utils/zenUtils'
+import { numberWithCommas } from '../../../utils/helpers'
 
 @inject('cgpStore', 'networkStore', 'portfolioStore')
 @observer
@@ -40,7 +40,7 @@ class InfoBoxes extends Component {
         {isDuringVote ? (
           <BoxLabel
             firstLine="Vote Weight Balance"
-            secondLine={`${kalapasToZen(snapshotBalanceAcc)} ZP`}
+            secondLine={`${numberWithCommas(kalapasToZen(snapshotBalanceAcc))} ZP`}
             className="magnify"
           />
         ) : (
@@ -53,13 +53,13 @@ class InfoBoxes extends Component {
         {isDuringVote ? (
           <BoxLabel
             firstLine="Current Block / Tally Block"
-            secondLine={`${currentBlock} / ${tallyBlock}`}
+            secondLine={`${numberWithCommas(currentBlock)} / ${numberWithCommas(tallyBlock)}`}
             className="magnify"
           />
         ) : (
           <BoxLabel
             firstLine="Current Block / Snapshot Block"
-            secondLine={`${currentBlock} / ${snapshotBlock}`}
+            secondLine={`${numberWithCommas(currentBlock)} / ${snapshotBlock}`}
             className="magnify"
           />
         )}
@@ -68,20 +68,20 @@ class InfoBoxes extends Component {
           <BoxLabel
             title={allAssetsString}
             firstLine="CGP Current Allocation / ZP Balance"
-            secondLine={`${cgpCurrentAllocation} / ${cgpCurrentZPBalance}`}
+            secondLine={`${cgpCurrentAllocation} / ${numberWithCommas(cgpCurrentZPBalance)} ZP`}
             className="magnify"
           />
         ) : (
           <BoxLabel
             firstLine="CGP Current Balance"
-            secondLine={String(cgpCurrentZPBalance)}
+            secondLine={`${numberWithCommas(cgpCurrentZPBalance)} ZP`}
             className="magnify"
           />
         )}
 
         <BoxLabel
           firstLine="Past Semester (TXS / ZP Votes)"
-          secondLine={`${prevIntervalTxs} / ${prevIntervalZpVoted}`}
+          secondLine={`${numberWithCommas(prevIntervalTxs)} / ${numberWithCommas(prevIntervalZpVoted)} ZP`}
           className="magnify"
         />
       </Flexbox>

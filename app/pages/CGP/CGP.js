@@ -13,13 +13,13 @@ import Layout from '../../components/Layout'
 // import IsValidIcon from '../../components/IsValidIcon'
 import { protectedModals } from '../../components/Buttons/ProtectedButton'
 import FormResponseMessage from '../../components/FormResponseMessage'
+import { zenBalanceDisplay } from '../../utils/zenUtils'
 
 import AllocationForm from './components/AllocationForm'
 import PayoutForm from './components/PayoutForm'
 import InfoBoxes from './components/InfoBoxes'
 import voteOnceModal from './components/voteOnceModal'
 import BallotsTable from './components/BallotsTable'
-import { zenBalanceDisplay } from '../../utils/zenUtils'
 
 @inject(
   'cgpStore',
