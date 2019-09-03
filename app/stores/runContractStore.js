@@ -141,7 +141,7 @@ class RunContractStore {
     const activeContract =
       this.activeContractsStore.activeContracts.find(ac => ac.address === runContractAddress)
     const savedContracts = db.get('savedContracts').value()
-    const isInSavedContracts = _.some(savedContracts, { contractId: activeContract.contractId })
+    const isInSavedContracts = _.some(savedContracts, { contractId: activeContract ? activeContract.contractId : '' })
     if (isInSavedContracts) {
       return
     }

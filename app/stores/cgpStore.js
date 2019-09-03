@@ -145,7 +145,7 @@ class CGPStore {
     )
     runInAction(() => {
       const filtered = balance.filter(data => data.asset === '00')[0]
-      this.cgpCurrentZPBalance = filtered ? format(filtered.balance) : ''
+      this.cgpCurrentZPBalance = filtered ? format(filtered.balance) : 0
       this.cgpCurrentBalance = balance
     })
   }
