@@ -144,8 +144,8 @@ class CGPStore {
       100000,
     )
     runInAction(() => {
-      const filtered = balance.filter(data => data.asset === '00')[0].balance
-      this.cgpCurrentZPBalance = format(filtered)
+      const filtered = balance.filter(data => data.asset === '00')[0]
+      this.cgpCurrentZPBalance = filtered ? format(filtered.balance) : ''
       this.cgpCurrentBalance = balance
     })
   }
@@ -238,7 +238,7 @@ class CGPStore {
     const serialized = tx.messageBody.dict.find(txs => txs[0] === command)[1].string
     switch (command) {
       case 'Allocation':
-        this.pastAllocation = convertPercentageToZP(Allocation.fromHex(serialized).allocation)
+        this.pastAllocation = convertPercentageToZP(Ballot.fromHex(serialized).getData().allocation)
         break
       case 'Payout':
         this.pastBallotId = serialized

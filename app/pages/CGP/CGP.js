@@ -19,6 +19,7 @@ import PayoutForm from './components/PayoutForm'
 import InfoBoxes from './components/InfoBoxes'
 import voteOnceModal from './components/voteOnceModal'
 import BallotsTable from './components/BallotsTable'
+import { zenBalanceDisplay } from '../../utils/zenUtils'
 
 @inject(
   'cgpStore',
@@ -100,7 +101,7 @@ class CGP extends Component {
       <SuccessResponse
         type="Allocation"
         hide={!allocationVoted}
-        message={`You voted for ${pastAllocation} Zp with ${snapshotBalanceAcc} `}
+        message={`You voted for ${pastAllocation} Zp with ${zenBalanceDisplay(snapshotBalanceAcc)} ZP`}
       />
     )
   }
@@ -111,7 +112,7 @@ class CGP extends Component {
       <SuccessResponse
         type="Payout"
         hide={!payoutVoted}
-        message={`You voted for BallotId: ${truncateString(pastBallotId)} with ${snapshotBalanceAcc} `}
+        message={`You voted for BallotId: ${truncateString(pastBallotId)} with ${zenBalanceDisplay(snapshotBalanceAcc)} ZP`}
       />
     )
   }
