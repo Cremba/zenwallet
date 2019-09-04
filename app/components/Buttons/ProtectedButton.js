@@ -43,13 +43,13 @@ export async function protectedModals({ requireSync } = {}) {
     console.log('entering require sync')
     const canContinue = await enforceSyncedModal()
     if (!canContinue) {
-      return
+      return null
     }
   }
   console.log('passed require sync')
   const confirmedPassword = await confirmPasswordModal()
   if (!confirmedPassword) {
-    return
+    return null
   }
   return confirmedPassword
 }

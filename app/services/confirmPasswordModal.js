@@ -11,6 +11,7 @@ const passwordModal = async () => {
   const submittedPassword = await submitPasswordModal()
   if (!submittedPassword) {
     await swal('You must insert a password')
+    return null
   }
   const isPasswordCorrect = await postCheckPassword(submittedPassword)
   if (!isPasswordCorrect) {
