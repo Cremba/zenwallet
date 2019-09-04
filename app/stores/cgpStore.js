@@ -250,12 +250,21 @@ class CGPStore {
 
   @action
   async fetchAssets() {
-    this.allocationVoted = await this.hasVoted('Allocation', this.snapshotBlock)
-    this.payoutVoted = await this.hasVoted('Payout', this.snapshotBlock)
-    this.snapshotBalanceAcc = await this.txHistoryStore.fetchSnapshot(this.snapshotBlock)
+    const [allocationVoted, payoutVoted, snapshotBalanceAcc] = await Promise.all([
+      this.allocationVoted = await this.hasVoted('Allocation', this.snapshotBlock),
+      this.payoutVoted = await this.hasVoted('Payout', this.snapshotBlock),
+      this.snapshotBalanceAcc = await this.txHistoryStore.fetchSnapshot(this.snapshotBlock),
+    ])
+    runInAction(() => {
+      this.allocationVoted = allocationVoted
+      this.payoutVoted = payoutVoted
+      this.snapshotBalanceAcc = snapshotBalanceAcc
+    })
     if (this.isVotingInterval) {
-      await this.voted('Allocation', this.snapshotBlock)
-      await this.voted('Payout', this.snapshotBlock)
+      await Promise.all([
+        this.voted('Allocation', this.snapshotBlock),
+        await this.voted('Payout', this.snapshotBlock),
+      ])
     }
     const transactions = await getContractTXHistory(
       this.networkStore.chain,
@@ -533,6 +542,7 @@ class CGPStore {
         })
       } catch (error) {
         runInAction(() => {
+          console.log('here', error.message)
           this.statusAllocation = { status: 'error', errorMessage: error.message }
         })
       }
