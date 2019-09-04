@@ -59,6 +59,21 @@ class CGPStore {
       () => this.removeBallotIdOnDetailsChange(),
     )
   }
+
+  setAutoRuns() {
+    // re-fetch when interval changes
+    this.fetchDisposer = autorun(() => {
+      if (this.networkStore.headers > 0) {
+        this.fetch()
+      }
+    })
+  }
+  clearAutoRuns() {
+    if (typeof this.fetchDisposer === 'function') {
+      this.fetchDisposer()
+    }
+  }
+
   @observable snapshotBalanceAcc = 0
   @observable assetCGP = []
   @observable cgpCurrentBalance = 0
@@ -240,7 +255,8 @@ class CGPStore {
     switch (command) {
       case 'Allocation':
         runInAction(() => {
-          this.pastAllocation = convertPercentageToZP(Ballot.fromHex(serialized).getData().allocation)
+          this.pastAllocation =
+            convertPercentageToZP(Ballot.fromHex(serialized).getData().allocation)
         })
         break
       case 'Payout':
@@ -255,6 +271,8 @@ class CGPStore {
 
   @action
   async fetchAssets() {
+    if (this.snapshotBlock <= 0) return
+
     const [allocationVoted, payoutVoted, snapshotBalanceAcc] = await Promise.all([
       await this.hasVoted('Allocation', this.snapshotBlock),
       await this.hasVoted('Payout', this.snapshotBlock),

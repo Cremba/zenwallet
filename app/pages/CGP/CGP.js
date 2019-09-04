@@ -43,10 +43,10 @@ class CGP extends Component {
       .fetch()
       .then()
       .catch()
-    this.props.cgpStore
-      .fetch()
-      .then()
-      .catch()
+    this.props.cgpStore.setAutoRuns()
+  }
+  componentWillUnmount() {
+    this.props.cgpStore.clearAutoRuns()
   }
 
   resetPayoutForm = () => this.props.cgpStore.resetPayout()
