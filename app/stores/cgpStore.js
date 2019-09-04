@@ -218,6 +218,7 @@ class CGPStore {
       .filter(e => internalTx.includes(e))
     return tx
   }
+
   @action
   async hasVoted(command, snapshotBlock) {
     const vote = await this.getVote(command, snapshotBlock)
@@ -238,10 +239,14 @@ class CGPStore {
     const serialized = tx.messageBody.dict.find(txs => txs[0] === command)[1].string
     switch (command) {
       case 'Allocation':
-        this.pastAllocation = convertPercentageToZP(Ballot.fromHex(serialized).getData().allocation)
+        runInAction(() => {
+          this.pastAllocation = convertPercentageToZP(Ballot.fromHex(serialized).getData().allocation)
+        })
         break
       case 'Payout':
-        this.pastBallotId = serialized
+        runInAction(() => {
+          this.pastBallotId = serialized
+        })
         break
       default:
         break
@@ -251,9 +256,9 @@ class CGPStore {
   @action
   async fetchAssets() {
     const [allocationVoted, payoutVoted, snapshotBalanceAcc] = await Promise.all([
-      this.allocationVoted = await this.hasVoted('Allocation', this.snapshotBlock),
-      this.payoutVoted = await this.hasVoted('Payout', this.snapshotBlock),
-      this.snapshotBalanceAcc = await this.txHistoryStore.fetchSnapshot(this.snapshotBlock),
+      await this.hasVoted('Allocation', this.snapshotBlock),
+      await this.hasVoted('Payout', this.snapshotBlock),
+      await this.txHistoryStore.fetchSnapshot(this.snapshotBlock),
     ])
     runInAction(() => {
       this.allocationVoted = allocationVoted
@@ -542,13 +547,12 @@ class CGPStore {
         })
       } catch (error) {
         runInAction(() => {
-          console.log('here', error.message)
           this.statusAllocation = { status: 'error', errorMessage: error.message }
         })
       }
     }
   }
-aw
+
   @action
   submitPayoutVote = async (confirmedPassword: string) => {
     if (this.payoutValid) {
