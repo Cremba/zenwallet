@@ -7,7 +7,7 @@ export default function voteOnceModal() {
   container.className = 'vote-once-modal-content'
   container.innerHTML = `
     <ul>
-      <li>You can only vote once for CGP Allocation and CGP Payout</li>
+      <li>You can only vote once for CGP Allocation and once for CGP Payout</li>
       <li>You can vote separately</li>
       <li>Your first vote is the one which counts</li>
       <li>Your vote weight will consist of your total ZP at the snapshot block</li>

@@ -75,6 +75,7 @@ class CGPStore {
   }
 
   @observable snapshotBalanceAcc = 0
+  @observable snapshotBalanceAccLoad = { loading: false, loaded: false }
   @observable assetCGP = []
   @observable cgpCurrentBalance = 0
   @observable cgpCurrentZPBalance = 0
@@ -273,6 +274,8 @@ class CGPStore {
   async fetchAssets() {
     if (this.snapshotBlock <= 0) return
 
+    this.snapshotBalanceAccLoad.loading = true
+
     const [allocationVoted, payoutVoted, snapshotBalanceAcc] = await Promise.all([
       await this.hasVoted('Allocation', this.snapshotBlock),
       await this.hasVoted('Payout', this.snapshotBlock),
@@ -282,6 +285,10 @@ class CGPStore {
       this.allocationVoted = allocationVoted
       this.payoutVoted = payoutVoted
       this.snapshotBalanceAcc = snapshotBalanceAcc
+      this.snapshotBalanceAccLoad = {
+        loading: false,
+        loaded: true,
+      }
     })
     if (this.isVotingInterval) {
       await Promise.all([
