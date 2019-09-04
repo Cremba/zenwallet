@@ -27,13 +27,13 @@ import {
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
 import {
   getCgp,
-  getCgpHistory,
   getCgpVotesFromExplorer,
   getCgpParticipatedZpFromExplorer,
   getCgpPopularBallotsFromExplorer,
   getContractBalance,
   getContractHistory,
   getContractTXHistory,
+  getLastAllocation,
 } from '../services/api-service'
 
 class CGPStore {
@@ -144,13 +144,14 @@ class CGPStore {
   async fetchCgp() {
     const [cgpCurrent, cgpPrev] = await Promise.all([
       getCgp(),
-      this.currentInterval > 1 ? getCgpHistory({ interval: this.currentInterval - 1 }) : [],
+      getLastAllocation(this.networkStore.chainUnformatted, this.currentInterval),
     ])
     runInAction(() => {
       this.cgpCurrentAllocation = cgpCurrent.allocation
       this.cgpCurrentPayout = cgpCurrent.payout
-      if (cgpPrev.length) {
-        this.cgpPrevAllocation = cgpPrev[0].allocation
+      if (cgpPrev.success) {
+        this.cgpPrevAllocation =
+          cgpPrev.winnerAllocation ? cgpPrev.winnerAllocation.content.allocation : 0
       }
     })
     const balance = await getContractBalance(

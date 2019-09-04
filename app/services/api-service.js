@@ -43,6 +43,11 @@ export async function getCgpHistory({ interval } = {}): Promise {
   return response.data
 }
 
+export async function getLastAllocation(chain, currentInterval: number): Promise {
+  const response = await getBE(chain).get(`/api/cgp/relevant?interval=${currentInterval - 1}`)
+  return response.data
+}
+
 export async function getCgpVotesFromExplorer({
   chain,
   type,
