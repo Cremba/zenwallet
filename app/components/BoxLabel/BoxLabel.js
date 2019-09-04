@@ -12,11 +12,13 @@ type Props = {
 
 class BoxLabel extends Component<Props> {
   render() {
-    const { className, ...rest } = this.props
+    const {
+      className, firstLine, secondLine, ...rest
+    } = this.props
     return (
       <Flexbox className={cx('box', className)} flexDirection="column" flexGrow={1} {...rest}>
-        <span className="first-input">{this.props.firstLine}</span>
-        <span className="second-input">{this.props.secondLine}</span>
+        <span className="first-input">{firstLine}</span>
+        <span className="second-input">{secondLine}</span>
       </Flexbox>
     )
   }
