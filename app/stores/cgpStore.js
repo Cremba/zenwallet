@@ -55,7 +55,7 @@ class CGPStore {
     reaction(
       () =>
         !isEqual(this.address, this.ballotDeserialized.address) ||
-        !isEqual(this.assetAmounts, this.ballotDeserialized.spends),
+        !isEqual(this.assetAmountsPure, this.ballotDeserialized.spends),
       () => this.removeBallotIdOnDetailsChange(),
     )
   }
@@ -442,6 +442,14 @@ class CGPStore {
     )
   }
 
+  /**
+   * An array of {asset, amount} pairs
+   */
+  @computed
+  get assetAmountsPure() {
+    return this.assetAmounts.map(item => ({ asset: item.asset, amount: item.amount }))
+  }
+
   @action
   resetStatuses() {
     this.statusAllocation = {}
@@ -473,7 +481,7 @@ class CGPStore {
   removeBallotIdOnDetailsChange() {
     if (
       !isEqual(this.address, this.ballotDeserialized.address) ||
-      !isEqual(this.assetAmounts, this.ballotDeserialized.spends)
+      !isEqual(this.assetAmountsPure, this.ballotDeserialized.spends)
     ) {
       runInAction(() => {
         this.ballotId = ''
@@ -496,7 +504,11 @@ class CGPStore {
         )
         const assets = spends.map(spend => {
           const { asset, amount } = spend
-          return { asset: asset.asset, amount: amount.intValue() }
+          return {
+            asset: asset.asset,
+            amount: amount.intValue(),
+            id: this.getUniqueId(), // needed for the ui
+          }
         })
         this.assetAmounts.replace(assets)
       })
@@ -513,7 +525,15 @@ class CGPStore {
     if (!lastItem.asset || !lastItem.amount) return
     if (this.assetAmounts.length >= 100) return
 
-    this.assetAmounts.push({ asset: '', amount: 0 })
+    // create an id for react to prevent list.map bugs
+    const uniqueId = this.getUniqueId()
+
+    this.assetAmounts.push({ asset: '', amount: 0, id: uniqueId })
+  }
+
+  getUniqueId() {
+    return Math.random().toString(36).substr(2, 9)
+      + Math.random().toString(36).substr(2, 9)
   }
 
   @action
@@ -576,7 +596,8 @@ class CGPStore {
     if (this.payoutValid) {
       try {
         const stringPayout = 'Payout'
-        const payout = toPayout(this.networkStore.chainUnformatted, this.address, this.assetAmounts)
+        const payout =
+          toPayout(this.networkStore.chainUnformatted, this.address, this.assetAmountsPure)
         const ballot = new Ballot(payout).toHex()
         const interval = Data.serialize(new Data.UInt32(BigInteger.valueOf(this.currentInterval)))
         const ballotSerialized = Data.serialize(new Data.String(ballot))
