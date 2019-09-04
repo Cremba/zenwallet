@@ -169,12 +169,15 @@ class CGP extends Component {
                 <section>
                   <Flexbox
                     flexDirection="column"
-                    className={cx('allocation-form-container', { invalid: !allocationValid })}
+                    className={cx('allocation-form-container', {
+                      invalid: !allocationValid,
+                      disabled: allocationVoted || this.state.inProgressAllocation,
+                    })}
                   >
                     <Flexbox className="section-title">
                       <h1>CGP Allocation</h1>
                     </Flexbox>
-                    <AllocationForm />
+                    <AllocationForm disabled={allocationVoted || this.state.inProgressAllocation} />
                   </Flexbox>
                   <Flexbox justifyContent="space-between" flexDirection="row">
                     {this.renderAllocationErrorResponse()}

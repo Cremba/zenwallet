@@ -19,12 +19,14 @@ class AllocationForm extends Component {
   render() {
     const {
       cgpStore: { allocation },
+      disabled,
     } = this.props
     return (
       <Flexbox flexDirection="column" className="allocation-form">
         <Flexbox flexDirection="column" className="form-row allocation-input-container">
           <div className="allocation-input">
             <InputRange
+              disabled={disabled}
               step={0.001}
               maxValue={50}
               minValue={0}

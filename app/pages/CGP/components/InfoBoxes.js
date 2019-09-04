@@ -59,7 +59,7 @@ class InfoBoxes extends Component {
         ) : (
           <BoxLabel
             firstLine="Current Block / Snapshot Block"
-            secondLine={`${numberWithCommas(currentBlock)} / ${snapshotBlock}`}
+            secondLine={`${numberWithCommas(currentBlock)} / ${numberWithCommas(snapshotBlock)}`}
             className="magnify"
           />
         )}

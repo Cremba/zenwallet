@@ -30,6 +30,24 @@
   }
 
   .allocation-form-container {
+    &.disabled {
+      .allocation-input {
+        .input-range__track--active {
+          background-color: $blue-disabled;
+        }
+        .input-range__slider {
+          background-color: $blue-disabled;
+          border-color: $blue-disabled;
+          cursor: wait;
+        }
+        .input-range__label-container {
+          .value {
+            background-color: $blue-disabled;
+          }
+        }
+      }
+    }
+
     &.invalid {
       .allocation-input {
         .input-range__track--active {
