@@ -85,7 +85,7 @@ class CGPStore {
   @observable assetAmounts = [{ asset: '', amount: 0 }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
-  contractIdCgp = '00000000273d3995e2bdd436a0f7524c5c0a127a9988d88b69ecbde552e1154fc138d6c5' // does not change
+  contractIdCgp = '00000000eac6c58bed912ff310df9f6960e8ed5c28aac83b8a98964224bab1e06c779b93' // does not change
   contractIdVote = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
 
   @computed
@@ -145,7 +145,7 @@ class CGPStore {
     )
     runInAction(() => {
       const filtered = balance.filter(data => data.asset === '00')[0]
-      this.cgpCurrentZPBalance = filtered ? format(filtered.balance) : ''
+      this.cgpCurrentZPBalance = filtered ? format(filtered.balance) : 0
       this.cgpCurrentBalance = balance
     })
   }
