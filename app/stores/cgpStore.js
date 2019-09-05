@@ -98,7 +98,7 @@ class CGPStore {
     popularBallots: false,
   }
   @observable address = ''
-  @observable assetAmounts = [{ asset: '', amount: 0 }]
+  @observable assetAmounts = [{ asset: '', amount: 0, id: this.getUniqueId() }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
   contractIdCgp = '00000000eac6c58bed912ff310df9f6960e8ed5c28aac83b8a98964224bab1e06c779b93' // does not change
