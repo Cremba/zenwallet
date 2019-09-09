@@ -5,7 +5,7 @@ import Flexbox from 'flexbox-react'
 import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 
 import CgpStore from '../../../stores/cgpStore'
-import { truncateString } from '../../../utils/helpers'
+import { truncateString, numberWithCommas } from '../../../utils/helpers'
 
 type Props = {
   cgpStore: CgpStore
@@ -20,12 +20,12 @@ class BallotsTable extends Component<Props> {
   renderRows() {
     const { popularBallots } = this.props.cgpStore
     return popularBallots.items.map(ballot => (
-      <Fragment key={`${ballot.id}`}>
-        <tr onClick={this.ballotIdClickHandler} data-value={ballot.id} className="ballot-row">
-          <td>
-            <div title={ballot.id}>{truncateString(ballot.id)}</div>
+      <Fragment key={`${ballot.ballot}`}>
+        <tr onClick={this.ballotIdClickHandler} data-value={ballot.ballot} className="ballot-row">
+          <td className="ballot-id">
+            <div title={ballot.ballot}>{truncateString(ballot.ballot)}</div>
           </td>
-          <td>{ballot.zpVoted} ZP</td>
+          <td className="zp-voted">{numberWithCommas(Number(ballot.zpAmount).toFixed(8))} ZP</td>
         </tr>
         <tr className="separator" />
       </Fragment>
@@ -60,7 +60,7 @@ class BallotsTable extends Component<Props> {
             <tbody>{this.renderRows()}</tbody>
           </table>
         </Flexbox>
-        {popularBallots.count > 0 && (
+        {popularBallots.count > 0 && popularBallots.items.length < popularBallots.count && (
           <button className="btn-link" onClick={fetchPopularBallots.bind(this.props.cgpStore)}>
             Load more
           </button>

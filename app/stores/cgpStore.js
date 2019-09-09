@@ -472,7 +472,7 @@ class CGPStore {
   @action
   resetPayout() {
     this.address = ''
-    this.assetAmounts = [{ asset: '', amount: 0 }]
+    this.assetAmounts = [{ asset: '', amount: 0, id: this.getUniqueId() }]
     this.statusPayout = {}
   }
 
