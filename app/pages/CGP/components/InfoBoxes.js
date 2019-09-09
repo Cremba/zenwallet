@@ -20,7 +20,7 @@ class InfoBoxes extends Component {
         tallyBlock,
         cgpCurrentZPBalance,
         assets,
-        cgpCurrentAllocation,
+        cgpCurrentAllocationZP,
         prevIntervalTxs,
         prevIntervalZpVoted,
         snapshotBalanceAcc,
@@ -68,7 +68,7 @@ class InfoBoxes extends Component {
           <BoxLabel
             title={allAssetsString}
             firstLine="CGP Current Allocation / ZP Balance"
-            secondLine={`${cgpCurrentAllocation} / ${numberWithCommas(cgpCurrentZPBalance)} ZP`}
+            secondLine={`${cgpCurrentAllocationZP} ZP / ${numberWithCommas(cgpCurrentZPBalance)} ZP`}
             className="magnify"
           />
         ) : (

@@ -458,6 +458,11 @@ class CGPStore {
     return this.assetAmounts.map(item => ({ asset: item.asset, amount: item.amount }))
   }
 
+  @computed
+  get cgpCurrentAllocationZP() {
+    return convertPercentageToZP(this.cgpCurrentAllocation)
+  }
+
   @action
   resetStatuses() {
     this.statusAllocation = {}
