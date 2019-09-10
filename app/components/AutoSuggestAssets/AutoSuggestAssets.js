@@ -24,7 +24,8 @@ type Props = {
   cgpStore: CgpStore,
   onUpdateParent: ({ asset: string }) => void,
   showLabel: boolean,
-  cgp: boolean
+  cgp: boolean,
+  cgpAssetAmountsIndex: number
 };
 
 type State = {
@@ -38,6 +39,13 @@ class AutoSuggestAssets extends Component<Props, State> {
   state = {
     suggestionInputValue: this.props.asset,
     suggestions: [],
+  }
+
+  componentDidUpdate() {
+    if (this.isValid) {
+      // for cgp - if one of the other selected assets change, and this asset had the same
+      this.updateParent()
+    }
   }
   // used by parent
   reset() {
@@ -91,9 +99,13 @@ class AutoSuggestAssets extends Component<Props, State> {
     return this.props.portfolioStore.assets.find(a => a.asset === this.state.suggestionInputValue)
   }
 
+  filterOutCGPSelectedSpends = (items: Array) =>
+    items.filter(item =>
+      this.props.cgpStore.assetAmountsPure.every(spend => spend.asset !== item.asset))
+
   getSuggestions = (value: string) => {
     const filtered = this.props.cgp
-      ? this.props.cgpStore.filteredBalances(value)
+      ? this.filterOutCGPSelectedSpends(this.props.cgpStore.filteredBalances(value))
       : this.props.portfolioStore.filteredBalances(value)
     return this.valueIsExactMatch(value) ? [] : filtered
   }
@@ -121,19 +133,44 @@ class AutoSuggestAssets extends Component<Props, State> {
     return !this.isValid && suggestions.length === 0 && suggestionInputValue.length > 0
   }
   get isValid() {
-    return !!this.getChosenAsset
+    return this.props.cgp ? this.isCGPValid : !!this.getChosenAsset
+  }
+  get isCGPValid() {
+    const {
+      cgpStore: { assetAmountsPure },
+      cgpAssetAmountsIndex,
+    } = this.props
+    const chosenAsset = this.getChosenAsset
+
+    return (
+      chosenAsset &&
+      ((cgpAssetAmountsIndex < assetAmountsPure.length &&
+        chosenAsset.asset &&
+        assetAmountsPure[cgpAssetAmountsIndex].asset === chosenAsset.asset) ||
+        assetAmountsPure.every(spend => spend.asset !== chosenAsset.asset))
+    )
   }
   renderErrorMessage() {
-    const { cgp } = this.props
     if (!this.hasError) {
       return null
     }
+    const { cgp, cgpStore: { assetAmountsPure } } = this.props
+    const chosenAsset = this.getChosenAsset
+    const cgpAssetAlreadyUsed = cgp &&
+      chosenAsset &&
+      chosenAsset.asset &&
+      assetAmountsPure.some(item => item.asset === chosenAsset.asset)
+
+    const cgpMessage = cgpAssetAlreadyUsed ? (
+      <span>This asset has already been selected</span>
+    ) : (
+      <span>The cgp doesn&apos;t have such an asset</span>
+    )
+
     return (
       <div className="input-message error">
         <FontAwesomeIcon icon={['far', 'exclamation']} />
-        {cgp ? (
-          <span>The cgp doesn&apos;t have such an asset</span>
-        ) : (
+        {cgp ? cgpMessage : (
           <span>You don&apos;t have such an asset</span>
         )}
       </div>

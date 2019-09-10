@@ -29,12 +29,13 @@ class AssetAmountPair extends Component {
 
   render() {
     const {
-      asset, assetBalance, amount, showLabels,
+      asset, assetBalance, amount, showLabels, index,
     } = this.props
     return (
       <React.Fragment>
         <AutoSuggestAssets
           cgp
+          cgpAssetAmountsIndex={index}
           asset={asset}
           onUpdateParent={this.assetChangedHandler}
           showLabel={showLabels}
@@ -62,6 +63,7 @@ AssetAmountPair.propTypes = {
   amount: PropTypes.number,
   onChange: PropTypes.func.isRequired,
   showLabels: PropTypes.bool,
+  index: PropTypes.number.isRequired,
 }
 
 AssetAmountPair.defaultProps = {

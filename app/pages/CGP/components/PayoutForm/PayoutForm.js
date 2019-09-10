@@ -140,6 +140,7 @@ class PayoutForm extends Component {
           {assetAmounts.map((item, index) => (
             <Flexbox flexDirection="row" className="form-row" key={item.id}>
               <AssetAmountPair
+                index={index}
                 showLabels={index === 0}
                 asset={item.asset}
                 amount={item.amount}
