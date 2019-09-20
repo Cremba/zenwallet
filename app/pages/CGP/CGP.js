@@ -126,18 +126,21 @@ class CGP extends Component {
   render() {
     const {
       cgpStore: {
+        fetching,
+        initialVotesFetchDone,
         payoutValid,
         allocationValid,
         payoutHasData,
         snapshotBlock,
         allocationVoted,
+        allocationVoteFetchStatus,
         payoutVoted,
+        payoutVoteFetchStatus,
         snapshotBalanceAcc,
         snapshotBalanceAccLoad,
       },
       networkStore: { blocks: currentBlock, chain },
     } = this.props
-
     const isDuringVote = currentBlock > snapshotBlock
 
     return (
@@ -166,37 +169,34 @@ class CGP extends Component {
             />
           )}
 
-          {isDuringVote && payoutVoted && allocationVoted && (
-            <MessageWithExplorerLink
-              chain={chain}
-              showLink
-              message="You already voted in this interval"
-            />
-          )}
-
-          {isDuringVote && (!payoutVoted || !allocationVoted) && snapshotBalanceAccLoad.loading && (
-            <Flexbox justifyContent="center">
-              <Loading />
-            </Flexbox>
-          )}
-
           {isDuringVote &&
             (!payoutVoted || !allocationVoted) &&
-            snapshotBalanceAccLoad.loaded &&
-            !snapshotBalanceAccLoad.loading && (
-              <React.Fragment>
-                {snapshotBalanceAcc === 0 && (
-                  <MessageWithExplorerLink
-                    message="You did not have any ZP at the snapshot block"
-                    chain={chain}
-                    showLink
-                  />
-                )}
-                {snapshotBalanceAcc > 0 && (
-                  <Flexbox>
-                    <Flexbox flexGrow={1} flexDirection="column" className="form-container">
+            ((!initialVotesFetchDone && fetching.votes) ||
+              (!snapshotBalanceAccLoad.loaded && snapshotBalanceAccLoad.loading)) && (
+              <Flexbox justifyContent="center">
+                <Loading />
+              </Flexbox>
+            )}
+
+          {isDuringVote && snapshotBalanceAccLoad.loaded && initialVotesFetchDone && (
+            <React.Fragment>
+              {snapshotBalanceAcc === 0 && (
+                <MessageWithExplorerLink
+                  message="You did not have any ZP at the snapshot block"
+                  chain={chain}
+                  showLink
+                />
+              )}
+              {snapshotBalanceAcc > 0 && (
+                <Flexbox>
+                  <Flexbox flexGrow={1} flexDirection="column" className="form-container">
+                    <section>
+                      <Flexbox className="section-title">
+                        <h1>CGP Allocation</h1>
+                      </Flexbox>
+                      {this.renderAllocationSuccessResponse()}
                       {!allocationVoted && (
-                        <section>
+                        <React.Fragment>
                           <Flexbox
                             flexDirection="column"
                             className={cx('allocation-form-container', {
@@ -204,47 +204,59 @@ class CGP extends Component {
                               disabled: allocationVoted || this.state.inProgressAllocation,
                             })}
                           >
-                            <Flexbox className="section-title">
-                              <h1>CGP Allocation</h1>
-                            </Flexbox>
                             <AllocationForm
                               disabled={allocationVoted || this.state.inProgressAllocation}
                             />
                           </Flexbox>
                           <Flexbox justifyContent="space-between" flexDirection="row">
                             {this.renderAllocationErrorResponse()}
-                            {this.renderAllocationSuccessResponse()}
                             <Flexbox flexGrow={2} />
                             <button
                               className={cx('button-on-right', {
-                                loading: this.state.inProgressAllocation,
+                                loading:
+                                  this.state.inProgressAllocation ||
+                                  allocationVoteFetchStatus.fetching,
                               })}
-                              disabled={this.state.inProgressAllocation || !allocationValid}
+                              disabled={
+                                this.state.inProgressAllocation ||
+                                allocationVoteFetchStatus.fetching ||
+                                allocationVoteFetchStatus.fetched ||
+                                !allocationValid ||
+                                allocationVoted
+                              }
                               onClick={this.submitAllocationVote}
-                              hidden={allocationVoted}
                             >
-                              {this.state.inProgressAllocation ? 'Voting' : 'Vote'}
+                              {this.state.inProgressAllocation || allocationVoteFetchStatus.fetching
+                                ? 'Voting'
+                                : 'Vote'}
                             </button>
                           </Flexbox>
-                        </section>
+                        </React.Fragment>
                       )}
+                    </section>
 
+                    <section>
+                      <Flexbox className="section-title">
+                        <h1>CGP Payout</h1>
+                      </Flexbox>
+                      {this.renderPayoutSuccessResponse()}
                       {!payoutVoted && (
-                        <section>
+                        <React.Fragment>
                           <Flexbox flexDirection="column" className="payout-form-container">
-                            <Flexbox className="section-title">
-                              <h1>CGP Payout</h1>
-                            </Flexbox>
                             <PayoutForm />
                           </Flexbox>
 
                           <Flexbox justifyContent="space-between" flexDirection="row">
                             {this.renderPayoutErrorResponse()}
-                            {this.renderPayoutSuccessResponse()}
+
                             <Flexbox flexGrow={2} />
                             <button
                               className={cx('button-on-right', 'secondary')}
-                              disabled={!payoutHasData || this.state.inProgressPayout}
+                              disabled={
+                                !payoutHasData ||
+                                this.state.inProgressPayout ||
+                                payoutVoteFetchStatus.fetching
+                              }
                               onClick={this.resetPayoutForm}
                               hidden={payoutVoted}
                             >
@@ -252,40 +264,47 @@ class CGP extends Component {
                             </button>
                             <button
                               className={cx('button-on-right', {
-                                loading: this.state.inProgressPayout,
+                                loading:
+                                  this.state.inProgressPayout || payoutVoteFetchStatus.fetching,
                               })}
                               disabled={
                                 this.state.inProgressPayout ||
+                                payoutVoteFetchStatus.fetching ||
+                                payoutVoteFetchStatus.fetched ||
                                 !payoutHasData ||
-                                (payoutHasData && !payoutValid)
+                                (payoutHasData && !payoutValid) ||
+                                payoutVoted
                               }
                               onClick={this.submitPayoutVote}
                               hidden={payoutVoted}
                             >
-                              {this.state.inProgressPayout ? 'Voting' : 'Vote'}
+                              {this.state.inProgressPayout || payoutVoteFetchStatus.fetching
+                                ? 'Voting'
+                                : 'Vote'}
                             </button>
                           </Flexbox>
-                        </section>
+                        </React.Fragment>
                       )}
-                    </Flexbox>
-                    {!payoutVoted && (
-                      <Flexbox className="form-container ballot-table-container">
-                        <section>
-                          <Flexbox flexDirection="column">
-                            <div className="section-title">
-                              <h1>Popular Ballots</h1>
-                            </div>
-                            <div className="ballot-table">
-                              <BallotsTable />
-                            </div>
-                          </Flexbox>
-                        </section>
-                      </Flexbox>
-                    )}
+                    </section>
                   </Flexbox>
-                )}
-              </React.Fragment>
-            )}
+                  {!payoutVoted && (
+                    <Flexbox className="form-container ballot-table-container">
+                      <section>
+                        <Flexbox flexDirection="column">
+                          <div className="section-title">
+                            <h1>Popular Ballots</h1>
+                          </div>
+                          <div className="ballot-table">
+                            <BallotsTable />
+                          </div>
+                        </Flexbox>
+                      </section>
+                    </Flexbox>
+                  )}
+                </Flexbox>
+              )}
+            </React.Fragment>
+          )}
         </Flexbox>
       </Layout>
     )

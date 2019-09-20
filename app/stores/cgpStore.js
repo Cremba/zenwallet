@@ -25,6 +25,7 @@ import {
   convertPercentageToZP,
 } from '../utils/helpers'
 import { isZenAsset, kalapasToZen, zenBalanceDisplay } from '../utils/zenUtils'
+import PollManager from '../utils/PollManager'
 import {
   getCgp,
   getCgpVotesFromExplorer,
@@ -44,6 +45,49 @@ class CGPStore {
     this.txHistoryStore = txHistoryStore
     this.authorizedProtocolStore = authStore
     this.runContractStore = runStore
+
+    /**
+     * poll for the vote right after it was made
+     * The votes are supposed to be found very quickly, hence the short timeout
+     */
+    this.fetchAllocationVotePollManager = new PollManager({
+      name: 'New CGP allocation vote fetch',
+      fnToPoll: (() => {
+        let count = 0
+        const maxFetchTimes = 100
+        return () => {
+          if (this.allocationVoteFetchStatus.fetched || count >= maxFetchTimes) {
+            runInAction(() => {
+              this.allocationVoteFetchStatus.fetching = false
+            })
+            this.fetchAllocationVotePollManager.stopPolling()
+          } else {
+            count += 1
+            this.fetchVotedDetails({ allocation: true })
+          }
+        }
+      })(),
+      timeoutInterval: 500,
+    })
+    this.fetchPayoutVotePollManager = new PollManager({
+      name: 'New CGP payout vote fetch',
+      fnToPoll: (() => {
+        let count = 0
+        const maxFetchTimes = 100
+        return () => {
+          if (this.payoutVoteFetchStatus.fetched || count >= maxFetchTimes) {
+            runInAction(() => {
+              this.payoutVoteFetchStatus.fetching = false
+            })
+            this.fetchPayoutVotePollManager.stopPolling()
+          } else {
+            count += 1
+            this.fetchVotedDetails({ payout: true })
+          }
+        }
+      })(),
+      timeoutInterval: 500,
+    })
 
     autorun(() => {
       if (this.ballotId) {
@@ -96,11 +140,21 @@ class CGPStore {
   @observable popularBallotsCurrentAmount = 10
   @observable fetching = {
     popularBallots: false,
+    votes: false,
   }
   @observable address = ''
   @observable assetAmounts = [{ asset: '', amount: 0, id: this.getUniqueId() }]
   @observable statusAllocation = {} // { status: 'success/error', errorMessage: '...' }
   @observable statusPayout = {} // { status: 'success/error', errorMessage: '...' }
+  @observable initialVotesFetchDone = false
+  @observable allocationVoteFetchStatus = {
+    fetching: false,
+    fetched: false,
+  }
+  @observable payoutVoteFetchStatus = {
+    fetching: false,
+    fetched: false,
+  }
   contractIdCgp = '00000000eac6c58bed912ff310df9f6960e8ed5c28aac83b8a98964224bab1e06c779b93' // does not change
   contractIdVote = '00000000abbf8805a203197e4ad548e4eaa2b16f683c013e31d316f387ecf7adc65b3fb2' // does not change
 
@@ -219,7 +273,6 @@ class CGPStore {
 
   @action
   async getVote(command, snapshotBlock) {
-    await this.txHistoryStore.fetch()
     const internalTx = this.txHistoryStore.transactions.map(t => t.txHash)
     const transactions = await getContractHistory(
       this.networkStore.chain,
@@ -229,22 +282,17 @@ class CGPStore {
     )
     if (isEmpty(this.txHistoryStore.transactions) || isEmpty(transactions)) return []
     const tx = transactions
-      .filter(t => t.command === command)
-      .filter(t => this.networkStore.headers - t.confirmations >= Number(snapshotBlock))
+      .filter(t => t.command === command
+        && this.networkStore.headers - t.confirmations >= Number(snapshotBlock))
       .map(t => t.txHash)
       .filter(e => internalTx.includes(e))
     return tx
   }
 
-  @action
-  async hasVoted(command, snapshotBlock) {
-    const vote = await this.getVote(command, snapshotBlock)
-    return !isEmpty(vote)
-  }
-
   async voted(command, snapshotBlock) {
     const votes = await this.getVote(command, snapshotBlock)
     const vote = votes[0]
+    if (isEmpty(vote)) return
     const transactions = await getContractHistory(
       this.networkStore.chain,
       this.contractIdVote,
@@ -257,13 +305,17 @@ class CGPStore {
     switch (command) {
       case 'Allocation':
         runInAction(() => {
+          this.allocationVoteFetchStatus.fetched = true
           this.pastAllocation =
             convertPercentageToZP(Ballot.fromHex(serialized).getData().allocation)
+          this.allocationVoted = true
         })
         break
       case 'Payout':
         runInAction(() => {
+          this.payoutVoteFetchStatus.fetched = true
           this.pastBallotId = serialized
+          this.payoutVoted = true
         })
         break
       default:
@@ -277,26 +329,24 @@ class CGPStore {
 
     this.snapshotBalanceAccLoad.loading = true
 
-    const [allocationVoted, payoutVoted, snapshotBalanceAcc] = await Promise.all([
-      await this.hasVoted('Allocation', this.snapshotBlock),
-      await this.hasVoted('Payout', this.snapshotBlock),
-      await this.txHistoryStore.fetchSnapshot(this.snapshotBlock),
-    ])
+    const snapshotBalanceAcc = await this.txHistoryStore.fetchSnapshot(this.snapshotBlock)
     runInAction(() => {
-      this.allocationVoted = allocationVoted
-      this.payoutVoted = payoutVoted
       this.snapshotBalanceAcc = snapshotBalanceAcc
       this.snapshotBalanceAccLoad = {
         loading: false,
         loaded: true,
       }
     })
-    if (this.isVotingInterval) {
-      await Promise.all([
-        this.voted('Allocation', this.snapshotBlock),
-        await this.voted('Payout', this.snapshotBlock),
-      ])
-    }
+    runInAction(() => {
+      this.fetching.votes = true
+    })
+    await this.fetchVotedDetails({ allocation: true, payout: true })
+    runInAction(() => {
+      // one time indicator for the first fetch
+      this.initialVotesFetchDone = true
+      this.fetching.votes = false
+    })
+
     const transactions = await getContractTXHistory(
       this.networkStore.chain,
       this.addressCGP,
@@ -306,6 +356,20 @@ class CGPStore {
     runInAction(() =>
       this.assetCGP
         .replace(snapshotBalance(transactions, this.snapshotBlock, this.networkStore.blocks)))
+  }
+
+  @action
+  async fetchVotedDetails({ allocation = false, payout = false } = {}) {
+    if (this.snapshotBlock <= 0) return
+
+    if (this.isVotingInterval) {
+      // fetch must be called before Promise.all to prevent a reset in the middle
+      await this.txHistoryStore.fetch()
+      return Promise.all([
+        allocation ? this.voted('Allocation', this.snapshotBlock) : null,
+        payout ? this.voted('Payout', this.snapshotBlock) : null,
+      ])
+    }
   }
 
   @action
@@ -593,6 +657,9 @@ class CGPStore {
           confirmedPassword,
           payloadData(this.addressVote, data, stringAllocation),
         )
+        // start polling for the vote
+        this.allocationVoteFetchStatus.fetching = true
+        this.fetchAllocationVotePollManager.initPolling()
         runInAction(() => {
           this.statusAllocation = { status: 'success' }
         })
@@ -636,6 +703,9 @@ class CGPStore {
           confirmedPassword,
           payloadData(this.addressVote, data, stringPayout),
         )
+        // start polling for the vote
+        this.payoutVoteFetchStatus.fetching = true
+        this.fetchPayoutVotePollManager.initPolling()
         runInAction(() => {
           this.statusPayout = { status: 'success' }
         })
